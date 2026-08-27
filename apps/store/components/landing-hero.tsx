@@ -1,6 +1,7 @@
 "use client";
 
 import localFont from "next/font/local";
+import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { submitStoreLeadAction, type SubmitLeadState } from "../app/actions";
 
@@ -18,6 +19,60 @@ const thmanyahSans = localFont({
 
 const initialState: SubmitLeadState = {};
 
+function FlyingArrowIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M12 19V5M12 5L6 11M12 5l6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ShareButton() {
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    const shareData = {
+      title: "وش تتمنى يكون عندنا؟",
+      text: "شارك رأيك بالشي اللي تتمنى نشوفه بمنطقتك!",
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch {
+        // المستخدم ألغى نافذة المشاركة — لا حاجة لأي إجراء بديل
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareData.url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // تعذّر الوصول للحافظة — لا يوجد بديل آخر متاح بهذه الحالة
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleShare}
+      className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-background px-4 py-3 text-xs font-bold text-foreground shadow-lg transition-transform hover:scale-[1.03] active:scale-95 lg:mt-5 lg:py-3.5 lg:text-sm"
+    >
+      {copied ? "تم نسخ الرابط!" : "شارك مع صديق"}
+      <FlyingArrowIcon className="h-3.5 w-3.5 rotate-45 animate-bounce lg:h-4 lg:w-4" />
+    </button>
+  );
+}
+
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -27,15 +82,7 @@ function SubmitButton() {
       aria-label="أرسل"
       className="absolute bottom-2.5 end-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-foreground/10 text-foreground transition-opacity hover:bg-foreground/15 disabled:opacity-50 lg:bottom-3 lg:end-3 lg:h-9 lg:w-9"
     >
-      <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden="true">
-        <path
-          d="M12 19V5M12 5L6 11M12 5l6 6"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <FlyingArrowIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
     </button>
   );
 }
@@ -55,9 +102,18 @@ export function LandingHero() {
           </p>
 
           {state.success ? (
-            <p className="mt-6 rounded-xl bg-background/10 p-3.5 text-xs lg:mt-8 lg:p-4 lg:text-sm">
-              تم استلام طلبك بنجاح — سنتواصل معك قريبًا. شكرًا لك!
-            </p>
+            <div className="mt-6 lg:mt-8">
+              <div className="rounded-3xl bg-background/10 p-5 text-center lg:p-6">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-background/15 lg:h-12 lg:w-12">
+                  <FlyingArrowIcon className="h-5 w-5 rotate-45 animate-bounce lg:h-6 lg:w-6" />
+                </div>
+                <p className="mt-3 text-base font-black lg:text-lg">وصلت أمنيتك 👀</p>
+                <p className="mt-1.5 text-xs text-background/70 lg:text-sm">
+                  نشوف… يمكن تكون هي اللي بنحققها
+                </p>
+              </div>
+              <ShareButton />
+            </div>
           ) : (
             <form action={formAction} className="mt-6 space-y-3 lg:mt-8 lg:space-y-4">
               <div>
