@@ -37,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       ) : null}
       <body>
         {children}
-        <Footer settings={settings} />
+        {settings.show_landing_page ? null : <Footer settings={settings} />}
       </body>
     </html>
   );
