@@ -128,7 +128,7 @@ export function LandingHero() {
     >
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-4 lg:px-8 lg:py-14">
         <div className="mx-auto w-full max-w-md">
-          <div dir="ltr" className="mb-4 text-center lg:mb-6 lg:text-right">
+          <div dir="ltr" style={thmanyahSans.style} className="mb-4 text-center lg:mb-6 lg:text-right">
             <span className="text-4xl font-black lg:text-6xl">SBAAH </span>
             <span className="text-5xl font-black lg:text-7xl">7</span>
             <span className="text-4xl font-black lg:text-6xl"> سبعة</span>
