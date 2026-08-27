@@ -129,13 +129,13 @@ export function LandingHero() {
     >
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-4 lg:px-8 lg:py-14">
         <div className="mx-auto w-full max-w-md">
-          <div className="-mt-4 mb-6 flex justify-center lg:mt-0 lg:mb-8">
+          <div className="-mt-10 mb-10 flex justify-center lg:-mt-6 lg:mb-14">
             <div
               dir="ltr"
               style={{
                 ...thmanyahSans.style,
                 textShadow:
-                  "1px 1px 0 rgba(0,0,0,0.3), 2px 2px 0 rgba(0,0,0,0.25), 3px 3px 0 rgba(0,0,0,0.2), 4px 5px 10px rgba(0,0,0,0.4)",
+                  "1px 1px 0 #00595a, 2px 2px 0 #00595a, 3px 3px 0 #003f40, 4px 4px 0 #003f40, 5px 5px 0 #002627, 6px 7px 12px rgba(0,0,0,0.55)",
               }}
               className="inline-block cursor-pointer whitespace-nowrap transition-transform hover:scale-105 active:scale-95"
             >
