@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { submitStoreLeadAction, type SubmitLeadState } from "../app/actions";
 
@@ -30,40 +29,9 @@ function SubmitButton() {
 
 export function LandingHero({ heroKicker, heroTitle }: { heroKicker: string; heroTitle: string }) {
   const [state, formAction] = useFormState(submitStoreLeadAction, initialState);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    // React لا يضمن ظهور خاصية muted بالـ HTML المُرسَل من السيرفر، والمتصفحات
-    // تسمح بالتشغيل التلقائي فقط للفيديو المكتوم فعليًا وقت التحليل الأولي —
-    // فبدونها يرفض المتصفح التشغيل التلقائي ويظهر زر تشغيل بدل ذلك. ضبطها هنا
-    // مباشرة على عنصر الفيديو يضمن اعتباره مكتومًا فعليًا قبل محاولة التشغيل.
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = true;
-    void video.play();
-  }, []);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-foreground text-background">
-      {/* فيديو خلفية متكرر (loop) بأعلى الصفحة — object-cover يضمن تغطية الشاشة
-          كاملة بلا تشوّه. فيديو مختلف للجوال (source بلا media، الأخير هو
-          الافتراضي) عن الكمبيوتر (source بـ media للشاشات الأوسع من 768px)،
-          لأن كل فيديو مقصوص/مُصوَّر بزاوية مناسبة لعرض شاشته. */}
-      <video
-        ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
-        autoPlay
-        muted
-        loop
-        playsInline
-        controls={false}
-        aria-hidden="true"
-      >
-        <source src="/videos/landing-hero-bg.mp4" media="(min-width: 768px)" type="video/mp4" />
-        <source src="/videos/landing-hero-bg-mobile.mp4" type="video/mp4" />
-      </video>
-      <div className="absolute inset-0 bg-gradient-to-b from-foreground/85 via-foreground/50 to-foreground/85" />
-
+    <main className="relative min-h-screen overflow-hidden bg-[#006B6B] text-background">
       <div className="relative z-10 flex min-h-screen flex-col justify-center px-5 py-16 lg:px-8">
         <div className="mx-auto w-full max-w-md">
           <span className="text-[12px] font-bold tracking-[0.15em] text-background/60">{heroKicker}</span>
