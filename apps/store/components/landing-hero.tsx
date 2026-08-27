@@ -129,11 +129,15 @@ export function LandingHero() {
     >
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-4 lg:px-8 lg:py-14">
         <div className="mx-auto w-full max-w-md">
-          <div className="mb-6 flex justify-center lg:mb-8">
+          <div className="-mt-4 mb-6 flex justify-center lg:mt-0 lg:mb-8">
             <div
               dir="ltr"
-              style={thmanyahSans.style}
-              className="inline-block cursor-pointer whitespace-nowrap rounded-full border border-background/25 bg-background/10 px-5 py-2 shadow-lg transition-transform hover:scale-105 hover:bg-background/20 active:scale-95 lg:px-7 lg:py-2.5"
+              style={{
+                ...thmanyahSans.style,
+                textShadow:
+                  "1px 1px 0 rgba(0,0,0,0.3), 2px 2px 0 rgba(0,0,0,0.25), 3px 3px 0 rgba(0,0,0,0.2), 4px 5px 10px rgba(0,0,0,0.4)",
+              }}
+              className="inline-block cursor-pointer whitespace-nowrap transition-transform hover:scale-105 active:scale-95"
             >
               <span className="text-3xl font-black lg:text-5xl">SBAAH </span>
               <span className="text-4xl font-black lg:text-6xl">7</span>
