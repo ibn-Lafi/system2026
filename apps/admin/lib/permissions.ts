@@ -20,7 +20,6 @@ export type Permission =
   | "manage_collections"
   | "manage_returns"
   | "manage_invoice_requests"
-  | "manage_reps"
   | "manage_settings"
   | "view_reports";
 
@@ -43,8 +42,9 @@ export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
 };
 
 // الأدوار القابلة للإضافة من صفحة إدارة المستخدمين (بترتيب معتمد) — لا يشمل
-// "rep" (له صفحة/تدفق مستقل بصفحة المناديب) ولا "admin" (لا يُنشأ أدمن آخر
-// من الواجهة تفاديًا لتوسيع دائرة الصلاحية الكاملة بلا رقابة).
+// "rep" (تطبيق المندوب مُزال من النظام؛ الدور يبقى بقاعدة البيانات لسجلات
+// تاريخية فقط) ولا "admin" (لا يُنشأ أدمن آخر من الواجهة تفاديًا لتوسيع
+// دائرة الصلاحية الكاملة بلا رقابة).
 export const ASSIGNABLE_STAFF_ROLES: StaffRole[] = [
   "accountant",
   "marketing",
@@ -74,7 +74,6 @@ export function permissionsForRole(role: StaffRole): Permission[] {
       "manage_collections",
       "manage_returns",
       "manage_invoice_requests",
-      "manage_reps",
       "manage_settings",
       "view_reports",
     ];
@@ -91,7 +90,6 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   manage_collections: "تسجيل التحصيلات",
   manage_returns: "تسجيل المرتجعات",
   manage_invoice_requests: "مراجعة طلبات تعديل الفواتير",
-  manage_reps: "إدارة حسابات المناديب",
   manage_settings: "إدارة المستخدمين وإعدادات النظام",
   view_reports: "عرض التقارير",
 };

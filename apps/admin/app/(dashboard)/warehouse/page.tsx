@@ -58,7 +58,7 @@ export default async function WarehousePage() {
       <PageHeader
         breadcrumb={<Breadcrumb items={["لوحة التحكم", "المخزون"]} />}
         title="المخزون"
-        subtitle="مخزون واحد مشترك للنظام كامل — المندوبون يبيعون منه مباشرة"
+        subtitle="مخزون واحد مشترك للنظام كامل"
         actions={
           canManage ? (
             <ModalTrigger label="+ تعديل كمية منتج" title="تعديل كمية منتج بالمخزون">

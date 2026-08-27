@@ -12,4 +12,3 @@ export * from "./bar-list";
 export * from "./bar-chart";
 export * from "./document-header";
 export * from "./invoice-print";
-export * from "./receipt-print";

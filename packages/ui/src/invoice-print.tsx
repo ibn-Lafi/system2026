@@ -23,7 +23,6 @@ export type InvoicePrintProps = {
   customerVatNumber?: string | null;
   customerAddress?: string | null;
   branchName?: string | null;
-  repName?: string | null;
   discountPercentage: number;
   items: InvoicePrintItem[];
   subtotal: number;
@@ -33,8 +32,7 @@ export type InvoicePrintProps = {
   qrCodeImage: string;
 };
 
-// مستند الفاتورة الضريبية بمقاس A4 — مُستخدم مطابقًا بالأدمن وتطبيق
-// المندوب (راجع CLAUDE.md §3: أي شيء مشترك ينتقل لـ packages/). يُطبع عبر
+// مستند الفاتورة الضريبية بمقاس A4 — يُطبع عبر
 // window.print()، وقواعد @media print بكل تطبيق (globals.css) تُظهر هذا
 // العنصر فقط (id="invoice-print-root") بحجم الصفحة الفعلي بغض النظر عن
 // تخطيط الصفحة المحيطة به على الشاشة.
@@ -51,7 +49,6 @@ export function InvoicePrintDocument({
   customerVatNumber,
   customerAddress,
   branchName,
-  repName,
   discountPercentage,
   items,
   subtotal,
@@ -146,21 +143,13 @@ export function InvoicePrintDocument({
       </div>
 
       {/* ===== تفاصيل الفاتورة (بعد الإجمالي) ===== */}
-      {repName || discountPercentage > 0 ? (
+      {discountPercentage > 0 ? (
         <div className="mt-3 border-t border-neutral-200 pt-3">
           <p className="mb-1 font-bold underline decoration-neutral-300 underline-offset-4">تفاصيل الفاتورة:</p>
-          {repName ? (
-            <p>
-              <span className="text-neutral-500">المندوب: </span>
-              {repName}
-            </p>
-          ) : null}
-          {discountPercentage > 0 ? (
-            <p>
-              <span className="text-neutral-500">نسبة الخصم المتفق عليها: </span>
-              {discountPercentage}%
-            </p>
-          ) : null}
+          <p>
+            <span className="text-neutral-500">نسبة الخصم المتفق عليها: </span>
+            {discountPercentage}%
+          </p>
         </div>
       ) : null}
 

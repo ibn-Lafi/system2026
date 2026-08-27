@@ -259,8 +259,8 @@ export async function addProductUnitAction(
   return { success: true };
 }
 
-// أرشفة منتج (بدل حذف فعلي) — يُخفيه من كتالوج المتجر والمندوب دون حذف
-// بياناته، لأن فواتير تاريخية قد تشير إليه (product_id). راجع CLAUDE.md.
+// أرشفة منتج (بدل حذف فعلي) — يُخفيه من كتالوج المتجر دون حذف بياناته،
+// لأن فواتير تاريخية قد تشير إليه (product_id). راجع CLAUDE.md.
 export async function toggleProductActiveAction(formData: FormData): Promise<void> {
   const productId = formData.get("productId");
   const nextIsActive = formData.get("nextIsActive") === "true";

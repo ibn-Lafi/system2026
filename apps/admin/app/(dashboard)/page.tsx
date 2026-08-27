@@ -1,4 +1,4 @@
-import { Card, PageHeader, Breadcrumb, BarChart, BarList } from "@system2026/ui";
+import { Card, PageHeader, Breadcrumb, BarChart } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { InvoiceIcon, WalletIcon, ChartIcon } from "../../components/icons";
@@ -14,36 +14,29 @@ export default async function DashboardHomePage() {
   const weekStart = new Date(todayStart);
   weekStart.setDate(weekStart.getDate() - 6);
 
-  const [{ data: todayInvoices }, { data: todayPayments }, { data: weekInvoices }, todayProfit, { data: reps }] =
-    await Promise.all([
-      supabase
-        .from("invoices")
-        .select<"total_amount, status", { total_amount: number; status: string }>("total_amount, status")
-        .gte("invoice_date", todayStart.toISOString())
-        .neq("status", "cancelled"),
-      supabase
-        .from("payments")
-        .select<"amount", { amount: number }>("amount")
-        .gte("payment_date", todayStart.toISOString()),
-      supabase
-        .from("invoices")
-        .select<"invoice_date, total_amount", { invoice_date: string; total_amount: number }>(
-          "invoice_date, total_amount",
-        )
-        .gte("invoice_date", weekStart.toISOString())
-        .neq("status", "cancelled"),
-      getProfitSummary({ from: todayStart.toISOString() }),
-      supabase.from("profiles").select<"id, name", { id: string; name: string }>("id, name").eq("role", "rep"),
-    ]);
+  const [{ data: todayInvoices }, { data: todayPayments }, { data: weekInvoices }, todayProfit] = await Promise.all([
+    supabase
+      .from("invoices")
+      .select<"total_amount, status", { total_amount: number; status: string }>("total_amount, status")
+      .gte("invoice_date", todayStart.toISOString())
+      .neq("status", "cancelled"),
+    supabase
+      .from("payments")
+      .select<"amount", { amount: number }>("amount")
+      .gte("payment_date", todayStart.toISOString()),
+    supabase
+      .from("invoices")
+      .select<"invoice_date, total_amount", { invoice_date: string; total_amount: number }>(
+        "invoice_date, total_amount",
+      )
+      .gte("invoice_date", weekStart.toISOString())
+      .neq("status", "cancelled"),
+    getProfitSummary({ from: todayStart.toISOString() }),
+  ]);
 
   const invoiceCount = todayInvoices?.length ?? 0;
   const salesTotal = todayInvoices?.reduce((sum, inv) => sum + inv.total_amount, 0) ?? 0;
   const collectionsTotal = todayPayments?.reduce((sum, p) => sum + p.amount, 0) ?? 0;
-
-  const repNameById = new Map((reps ?? []).map((r) => [r.id, r.name]));
-  const topRepsToday = Array.from(todayProfit.byRep.entries())
-    .sort((a, b) => b[1].profit - a[1].profit)
-    .slice(0, 5);
 
   const salesByDay = new Map<string, number>();
   for (const inv of weekInvoices ?? []) {
@@ -88,25 +81,10 @@ export default async function DashboardHomePage() {
         ))}
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4">
         <Card>
           <h2 className="mb-4 font-semibold">المبيعات آخر 7 أيام</h2>
           <BarChart data={weekChartData} />
-        </Card>
-
-        <Card>
-          <h2 className="mb-4 font-semibold">أعلى المناديب اليوم (مبيعًا وربحًا)</h2>
-          {topRepsToday.length > 0 ? (
-            <BarList
-              items={topRepsToday.map(([repId, stats]) => ({
-                label: repNameById.get(repId) ?? "—",
-                value: stats.profit,
-                displayValue: `${formatCurrency(stats.sales)} — ربح ${formatCurrency(stats.profit)}`,
-              }))}
-            />
-          ) : (
-            <p className="text-sm text-foreground/60">لا توجد مبيعات اليوم بعد</p>
-          )}
         </Card>
       </div>
     </div>

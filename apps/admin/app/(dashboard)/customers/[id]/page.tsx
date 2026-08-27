@@ -134,45 +134,31 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   if (!customer) notFound();
 
-  const [{ data: invoices }, { data: payments }, { data: customerReps }, { data: branches }, { data: cities }] =
-    await Promise.all([
-      supabase
-        .from("invoices")
-        .select<"id, invoice_number, invoice_date, total_amount, status", InvoiceRow>(
-          "id, invoice_number, invoice_date, total_amount, status",
-        )
-        .eq("customer_id", customer.id)
-        .order("invoice_number", { ascending: false }),
-      supabase
-        .from("payments")
-        .select<"id, payment_date, amount, method, invoice_id", PaymentRow>(
-          "id, payment_date, amount, method, invoice_id",
-        )
-        .eq("customer_id", customer.id)
-        .order("payment_date", { ascending: false }),
-      supabase
-        .from("customer_reps")
-        .select<"rep_id", { rep_id: string }>("rep_id")
-        .eq("customer_id", customer.id),
-      supabase
-        .from("customer_branches")
-        .select<
-          "id, name, shop_name, address, city_id, phone, google_maps_link, show_in_store",
-          BranchRow
-        >("id, name, shop_name, address, city_id, phone, google_maps_link, show_in_store")
-        .eq("customer_id", customer.id)
-        .order("name"),
-      supabase.from("cities").select<"id, name", City>("id, name").order("name"),
-    ]);
-
-  const repIds = (customerReps ?? []).map((cr) => cr.rep_id);
-  const { data: reps } =
-    repIds.length > 0
-      ? await supabase.from("profiles").select<"id, name", { id: string; name: string }>("id, name").in(
-          "id",
-          repIds,
-        )
-      : { data: [] as { id: string; name: string }[] };
+  const [{ data: invoices }, { data: payments }, { data: branches }, { data: cities }] = await Promise.all([
+    supabase
+      .from("invoices")
+      .select<"id, invoice_number, invoice_date, total_amount, status", InvoiceRow>(
+        "id, invoice_number, invoice_date, total_amount, status",
+      )
+      .eq("customer_id", customer.id)
+      .order("invoice_number", { ascending: false }),
+    supabase
+      .from("payments")
+      .select<"id, payment_date, amount, method, invoice_id", PaymentRow>(
+        "id, payment_date, amount, method, invoice_id",
+      )
+      .eq("customer_id", customer.id)
+      .order("payment_date", { ascending: false }),
+    supabase
+      .from("customer_branches")
+      .select<
+        "id, name, shop_name, address, city_id, phone, google_maps_link, show_in_store",
+        BranchRow
+      >("id, name, shop_name, address, city_id, phone, google_maps_link, show_in_store")
+      .eq("customer_id", customer.id)
+      .order("name"),
+    supabase.from("cities").select<"id, name", City>("id, name").order("name"),
+  ]);
 
   const cityNameById = new Map((cities ?? []).map((c) => [c.id, c.name]));
 
@@ -225,10 +211,6 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             <p>
               <span className="text-foreground/60">ملاحظات: </span>
               {customer.notes ?? "—"}
-            </p>
-            <p>
-              <span className="text-foreground/60">المناديب: </span>
-              {(reps ?? []).map((r) => r.name).join("، ") || "—"}
             </p>
             <p>
               <span className="text-foreground/60">ظاهر بالمتجر: </span>

@@ -10,20 +10,19 @@ type ReturnRecordRow = {
   return_date: string;
   total_credit_amount: number;
   customer_id: string;
-  rep_id: string | null;
 };
 
 export default async function ReturnsPage() {
   const supabase = createSupabaseServerClient();
   const role = await getCurrentUserRole();
 
-  const [{ data: returns }, { data: customers }, { data: reps }] = await Promise.all([
+  const [{ data: returns }, { data: customers }] = await Promise.all([
     supabase
       .from("return_records")
       .select<
-        "id, return_date, total_credit_amount, customer_id, rep_id",
+        "id, return_date, total_credit_amount, customer_id",
         ReturnRecordRow
-      >("id, return_date, total_credit_amount, customer_id, rep_id")
+      >("id, return_date, total_credit_amount, customer_id")
       .order("return_date", { ascending: false })
       .limit(50),
     supabase
@@ -32,15 +31,9 @@ export default async function ReturnsPage() {
         "id, name, shop_name",
       )
       .order("name"),
-    supabase
-      .from("profiles")
-      .select<"id, name", { id: string; name: string }>("id, name")
-      .eq("role", "rep")
-      .order("name"),
   ]);
 
   const customerNameById = new Map((customers ?? []).map((c) => [c.id, c.shop_name ?? c.name]));
-  const repNameById = new Map((reps ?? []).map((r) => [r.id, r.name]));
 
   return (
     <div className="space-y-6">
@@ -50,7 +43,7 @@ export default async function ReturnsPage() {
         actions={
           hasPermission(role, "manage_returns") && (customers?.length ?? 0) > 0 ? (
             <ModalTrigger label="+ تسجيل مرتجع" title="تسجيل مرتجع جديد" size="lg">
-              <ReturnForm customers={customers ?? []} reps={reps ?? []} />
+              <ReturnForm customers={customers ?? []} />
             </ModalTrigger>
           ) : null
         }
@@ -67,7 +60,6 @@ export default async function ReturnsPage() {
               <tr className="border-b border-border text-right text-foreground/60">
                 <th className="py-2">التاريخ</th>
                 <th>العميل</th>
-                <th>المندوب</th>
                 <th>قيمة التسوية</th>
               </tr>
             </thead>
@@ -76,7 +68,6 @@ export default async function ReturnsPage() {
                 <tr key={r.id} className="border-b border-border/50">
                   <td className="py-2">{new Date(r.return_date).toLocaleString("ar-SA")}</td>
                   <td>{customerNameById.get(r.customer_id) ?? "—"}</td>
-                  <td>{r.rep_id ? repNameById.get(r.rep_id) ?? "—" : "—"}</td>
                   <td>{formatCurrency(r.total_credit_amount)}</td>
                 </tr>
               ))}

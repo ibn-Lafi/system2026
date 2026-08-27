@@ -1,5 +1,5 @@
 // دالة مساعدة لتجديد جلسة Supabase داخل middleware.ts الخاص بكل تطبيق
-// (admin و rep فقط — store عام بدون Auth). راجع apps/*/middleware.ts.
+// (admin فقط — store عام بدون Auth). راجع apps/*/middleware.ts.
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./types";

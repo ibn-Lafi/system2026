@@ -7,7 +7,6 @@ import { getCustomerOutstandingBalances, getSupplierOutstandingBalances } from "
 
 type ProductRow = { id: string; name: string; average_cost: number; has_expiry: boolean; expiry_date: string | null };
 type WriteOffMovement = { product_id: string; quantity_change: number };
-type RepRow = { id: string; name: string };
 type SettingsRow = { expiry_alert_days_threshold: number };
 
 function startOfToday() {
@@ -32,39 +31,30 @@ export default async function ReportsPage({
     to: searchParams.to ? `${searchParams.to}T23:59:59` : undefined,
   };
 
-  const [
-    profitSummary,
-    { data: products },
-    { data: writeOffs },
-    { data: reps },
-    { data: settings },
-    customerDebt,
-    supplierPayables,
-  ] = await Promise.all([
-    getProfitSummary(range),
-    supabase
-      .from("products")
-      .select<
-        "id, name, average_cost, has_expiry, expiry_date",
-        ProductRow
-      >("id, name, average_cost, has_expiry, expiry_date"),
-    supabase
-      .from("stock_movements")
-      .select<"product_id, quantity_change", WriteOffMovement>("product_id, quantity_change")
-      .eq("movement_type", "write_off"),
-    supabase.from("profiles").select<"id, name", RepRow>("id, name").eq("role", "rep"),
-    supabase
-      .from("system_settings")
-      .select<"expiry_alert_days_threshold", SettingsRow>("expiry_alert_days_threshold")
-      .eq("id", 1)
-      .single(),
-    getCustomerOutstandingBalances(),
-    getSupplierOutstandingBalances(),
-  ]);
+  const [profitSummary, { data: products }, { data: writeOffs }, { data: settings }, customerDebt, supplierPayables] =
+    await Promise.all([
+      getProfitSummary(range),
+      supabase
+        .from("products")
+        .select<
+          "id, name, average_cost, has_expiry, expiry_date",
+          ProductRow
+        >("id, name, average_cost, has_expiry, expiry_date"),
+      supabase
+        .from("stock_movements")
+        .select<"product_id, quantity_change", WriteOffMovement>("product_id, quantity_change")
+        .eq("movement_type", "write_off"),
+      supabase
+        .from("system_settings")
+        .select<"expiry_alert_days_threshold", SettingsRow>("expiry_alert_days_threshold")
+        .eq("id", 1)
+        .single(),
+      getCustomerOutstandingBalances(),
+      getSupplierOutstandingBalances(),
+    ]);
 
   const productNameById = new Map((products ?? []).map((p) => [p.id, p.name]));
   const productCostById = new Map((products ?? []).map((p) => [p.id, p.average_cost]));
-  const repNameById = new Map((reps ?? []).map((r) => [r.id, r.name]));
 
   const topProductsByProfit = Array.from(profitSummary.byProduct.entries())
     .sort((a, b) => b[1].profit - a[1].profit)
@@ -73,8 +63,6 @@ export default async function ReportsPage({
   const topProductsByQuantity = Array.from(profitSummary.byProduct.entries())
     .sort((a, b) => b[1].quantity - a[1].quantity)
     .slice(0, 10);
-
-  const topReps = Array.from(profitSummary.byRep.entries()).sort((a, b) => b[1].profit - a[1].profit);
 
   let totalLossValue = 0;
   const lossByProduct = new Map<string, number>();
@@ -229,44 +217,6 @@ export default async function ReportsPage({
           </table>
         </div>
         {topProductsByProfit.length === 0 ? <p className="py-4 text-foreground/60">لا توجد بيانات لهذه الفترة</p> : null}
-      </Card>
-
-      <Card>
-        <h2 className="mb-4 font-semibold">الربح حسب المندوب</h2>
-        {topReps.length > 0 ? (
-          <BarList
-            items={topReps.map(([repId, stats]) => ({
-              label: repNameById.get(repId) ?? "—",
-              value: stats.profit,
-              displayValue: formatCurrency(stats.profit),
-            }))}
-          />
-        ) : null}
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 font-semibold">تفاصيل الربح حسب المندوب</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-right text-foreground/60">
-                <th className="py-2">المندوب</th>
-                <th>المبيعات</th>
-                <th>الربح</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topReps.map(([repId, stats]) => (
-                <tr key={repId} className="border-b border-border/50">
-                  <td className="py-2">{repNameById.get(repId) ?? "—"}</td>
-                  <td>{formatCurrency(stats.sales)}</td>
-                  <td>{formatCurrency(stats.profit)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {topReps.length === 0 ? <p className="py-4 text-foreground/60">لا توجد بيانات لهذه الفترة</p> : null}
       </Card>
 
       <Card>

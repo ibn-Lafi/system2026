@@ -19,7 +19,6 @@ const NAV_ITEMS: NavItemDef[] = [
   { href: "/products", label: "المنتجات", icon: "box", permissions: ["manage_products"] },
   { href: "/suppliers", label: "الموردين", icon: "truck", permissions: ["manage_purchases"] },
   { href: "/warehouse", label: "المخزون", icon: "warehouse", permissions: ["manage_warehouse"] },
-  { href: "/reps", label: "المناديب", icon: "users", permissions: ["manage_reps"] },
   { href: "/customers", label: "العملاء", icon: "store", permissions: ["manage_customers"] },
   {
     href: "/invoices",

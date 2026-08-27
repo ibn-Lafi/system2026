@@ -13,7 +13,6 @@ import {
 } from "./actions";
 
 type Customer = { id: string; name: string; shop_name: string | null };
-type Rep = { id: string; name: string };
 type Condition = "resalable" | "damaged" | "expired";
 
 const CONDITIONS: { value: Condition; label: string }[] = [
@@ -36,10 +35,9 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
 // تدفّق موجّه: عميل ← فاتورة سابقة له ← تحديد كمية/حالة الإرجاع من بنود
 // تلك الفاتورة فعليًا (بدل اختيار منتج حر بكمية حرة) — يمنع اختيار منتج
 // غير موجود بالفاتورة أو كمية أكبر من المباعة فعليًا.
-export function ReturnForm({ customers, reps }: { customers: Customer[]; reps: Rep[] }) {
+export function ReturnForm({ customers }: { customers: Customer[] }) {
   const [state, formAction] = useFormState(createReturnAction, initialState);
   const [customerId, setCustomerId] = useState(customers[0]?.id ?? "");
-  const [repId, setRepId] = useState("");
   const [invoices, setInvoices] = useState<CustomerInvoice[] | null>(null);
   const [invoiceId, setInvoiceId] = useState("");
   const [items, setItems] = useState<ReturnableItem[] | null>(null);
@@ -95,7 +93,6 @@ export function ReturnForm({ customers, reps }: { customers: Customer[]; reps: R
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="customerId" value={customerId} />
       <input type="hidden" name="invoiceId" value={invoiceId} />
-      <input type="hidden" name="repId" value={repId} />
       <input type="hidden" name="items" value={JSON.stringify(returnItemsPayload)} />
 
       <div>
@@ -125,18 +122,6 @@ export function ReturnForm({ customers, reps }: { customers: Customer[]; reps: R
             ))}
           </Select>
         )}
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm font-medium">المندوب (إن كانت البضاعة السليمة سترجع لرصيده)</label>
-        <Select value={repId} onChange={(e) => setRepId(e.target.value)}>
-          <option value="">بدون تحديد</option>
-          {reps.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </Select>
       </div>
 
       {invoiceId ? (
