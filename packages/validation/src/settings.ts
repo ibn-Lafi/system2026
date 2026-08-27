@@ -87,3 +87,15 @@ export type UpdateStoreThemeInput = z.infer<typeof updateStoreThemeSchema>;
 export type UpdatePromoBannerContentInput = z.infer<typeof updatePromoBannerContentSchema>;
 export type UpdateFeaturesContentInput = z.infer<typeof updateFeaturesContentSchema>;
 export type UpdateTestimonialsContentInput = z.infer<typeof updateTestimonialsContentSchema>;
+
+export const updateStoreLandingModeSchema = z.object({
+  showLandingPage: z.boolean().default(false),
+});
+
+export const submitStoreLeadSchema = z.object({
+  phoneNumber: z.string().regex(/^5[0-9]{8}$/, "رقم جوال سعودي غير صالح (مثال: 5xxxxxxxx)"),
+  desiredStore: z.string().min(3, "الرجاء وصف ما ترغب بفتحه"),
+});
+
+export type UpdateStoreLandingModeInput = z.infer<typeof updateStoreLandingModeSchema>;
+export type SubmitStoreLeadInput = z.infer<typeof submitStoreLeadSchema>;

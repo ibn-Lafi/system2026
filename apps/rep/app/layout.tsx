@@ -13,8 +13,8 @@ const cairo = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "تطبيق المندوب",
-  description: "خط السير، الفواتير الميدانية، والتحصيلات",
+  title: "سبعة — تطبيق المندوب",
+  description: "خط السير، الفواتير الميدانية، والتحصيلات — منصة سبعة (SBAAH)",
 };
 
 export const viewport: Viewport = {

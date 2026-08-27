@@ -13,6 +13,7 @@ export type StoreSettings = {
   show_points_of_sale_section: boolean;
   custom_css: string | null;
   custom_html: string | null;
+  show_landing_page: boolean;
 };
 
 const DEFAULT_STORE_SETTINGS: StoreSettings = {
@@ -27,6 +28,7 @@ const DEFAULT_STORE_SETTINGS: StoreSettings = {
   show_points_of_sale_section: true,
   custom_css: null,
   custom_html: null,
+  show_landing_page: false,
 };
 
 export const getStoreSettings = cache(async (): Promise<StoreSettings> => {

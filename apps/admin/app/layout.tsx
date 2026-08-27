@@ -15,8 +15,8 @@ const cairo = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "لوحة التحكم",
-  description: "لوحة تحكم نظام التوزيع والمبيعات الميدانية",
+  title: "لوحة تحكم سبعة",
+  description: "لوحة تحكم منصة سبعة (SBAAH)",
 };
 
 export const viewport: Viewport = {

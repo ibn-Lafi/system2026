@@ -10,6 +10,7 @@ import {
   updateStoreLogoAction,
   updateStoreSocialLinksAction,
   updateStoreHomepageSectionsAction,
+  updateStoreLandingModeAction,
 } from "./actions";
 
 type StoreSettings = {
@@ -22,6 +23,7 @@ type StoreSettings = {
   instagram_url: string | null;
   tiktok_url: string | null;
   show_points_of_sale_section: boolean;
+  show_landing_page: boolean;
 };
 
 export default async function StoreControlPanelPage() {
@@ -32,10 +34,10 @@ export default async function StoreControlPanelPage() {
   const { data: settings } = await supabase
     .from("store_settings")
     .select<
-      "store_name, logo_url, hero_kicker, hero_title, site_description, whatsapp_number, instagram_url, tiktok_url, show_points_of_sale_section",
+      "store_name, logo_url, hero_kicker, hero_title, site_description, whatsapp_number, instagram_url, tiktok_url, show_points_of_sale_section, show_landing_page",
       StoreSettings
     >(
-      "store_name, logo_url, hero_kicker, hero_title, site_description, whatsapp_number, instagram_url, tiktok_url, show_points_of_sale_section",
+      "store_name, logo_url, hero_kicker, hero_title, site_description, whatsapp_number, instagram_url, tiktok_url, show_points_of_sale_section, show_landing_page",
     )
     .eq("id", 1)
     .single();
@@ -156,6 +158,30 @@ export default async function StoreControlPanelPage() {
                 إظهار قسم &quot;قريب منك دائمًا&quot; (نقاط البيع)
               </label>
             </ActionForm>
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="font-semibold">وضع الصفحة الرئيسية</h2>
+          <p className="mt-1 text-sm text-foreground/60">
+            بدّل بين عرض المتجر والمنتجات كالمعتاد، أو صفحة هبوط بسيطة تجمع بيانات الزوار المهتمين فقط (رقم جوال
+            وما يرغبون بفتحه)
+          </p>
+          <div className="mt-4 space-y-3">
+            <ActionForm action={updateStoreLandingModeAction} className="space-y-3" submitLabel="حفظ">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="showLandingPage"
+                  defaultChecked={settings?.show_landing_page ?? false}
+                  className="h-4 w-4 rounded border-border"
+                />
+                تفعيل صفحة الهبوط (بدل عرض المنتجات)
+              </label>
+            </ActionForm>
+            <Link href="/store/leads">
+              <Button variant="outline">عرض بيانات الزوار المستلمة</Button>
+            </Link>
           </div>
         </Card>
 
