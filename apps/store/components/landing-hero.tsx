@@ -176,8 +176,8 @@ export function LandingHero() {
                   type="tel"
                   dir="ltr"
                   required
-                  placeholder="9665XXXXXXXX"
-                  pattern="9665[0-9]{8}"
+                  placeholder="05XXXXXXXX"
+                  pattern="05[0-9]{8}"
                   className="w-full rounded-full bg-background px-3.5 py-2.5 text-right text-xs text-foreground shadow-lg placeholder:text-foreground/35 focus:outline-none lg:px-4 lg:py-3.5 lg:text-sm"
                 />
               </div>

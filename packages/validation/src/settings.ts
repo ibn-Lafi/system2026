@@ -93,7 +93,7 @@ export const updateStoreLandingModeSchema = z.object({
 });
 
 export const submitStoreLeadSchema = z.object({
-  phoneNumber: z.string().regex(/^9665[0-9]{8}$/, "رقم جوال سعودي غير صالح (مثال: 9665xxxxxxxx)"),
+  phoneNumber: z.string().regex(/^05[0-9]{8}$/, "رقم جوال سعودي غير صالح (مثال: 05xxxxxxxx)"),
   desiredStore: z.string().min(3, "الرجاء وصف ما ترغب بفتحه"),
 });
 
