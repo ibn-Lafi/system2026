@@ -1,9 +1,17 @@
 "use client";
 
 import localFont from "next/font/local";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { submitStoreLeadAction, type SubmitLeadState } from "../app/actions";
+
+// يبدأ الحقل بنفس ارتفاع سطر واحد (كحقل "رقمك")، ويتمدد تلقائيًا مع كل
+// سطر جديد بدل أن يكون بارتفاع ثابت لعدة أسطر منذ البداية.
+function autoGrowTextarea(event: FormEvent<HTMLTextAreaElement>) {
+  const textarea = event.currentTarget;
+  textarea.style.height = "auto";
+  textarea.style.height = `${textarea.scrollHeight}px`;
+}
 
 // خط "ثمانية" الخاص بصفحة الهبوط فقط (حملة تسويقية منفصلة عن هوية المتجر
 // العامة التي تستخدم Cairo) — مصدره ملف رفعه المستخدم لجذر المستودع.
@@ -154,7 +162,7 @@ export function LandingHero() {
                   required
                   placeholder="9665XXXXXXXX"
                   pattern="9665[0-9]{8}"
-                  className="w-full rounded-full bg-background px-3.5 py-2.5 text-xs text-foreground shadow-lg placeholder:text-foreground/35 focus:outline-none lg:px-4 lg:py-3.5 lg:text-sm"
+                  className="w-full rounded-full bg-background px-3.5 py-2.5 text-right text-xs text-foreground shadow-lg placeholder:text-foreground/35 focus:outline-none lg:px-4 lg:py-3.5 lg:text-sm"
                 />
               </div>
               <div className="relative">
@@ -165,9 +173,10 @@ export function LandingHero() {
                   id="desiredStore"
                   name="desiredStore"
                   required
-                  rows={3}
+                  rows={1}
+                  onInput={autoGrowTextarea}
                   placeholder="اكتب أمنيتك.."
-                  className="w-full rounded-3xl bg-background px-3.5 py-2.5 pe-12 text-xs text-foreground placeholder:text-foreground/35 shadow-lg focus:outline-none lg:px-4 lg:py-3.5 lg:pe-14 lg:text-sm"
+                  className="w-full resize-none overflow-hidden rounded-3xl bg-background px-3.5 py-2.5 pe-12 text-xs text-foreground placeholder:text-foreground/35 shadow-lg focus:outline-none lg:px-4 lg:py-3.5 lg:pe-14 lg:text-sm"
                 />
                 <SubmitButton />
               </div>
