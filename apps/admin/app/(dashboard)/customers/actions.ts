@@ -16,8 +16,6 @@ export async function createCustomerAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const repIds = formData.getAll("repIds").filter((v): v is string => typeof v === "string" && v.length > 0);
-
   const parsed = createCustomerSchema.safeParse({
     name: formData.get("name"),
     shopName: formData.get("shopName") || undefined,
@@ -29,37 +27,25 @@ export async function createCustomerAction(
     commercialRegistrationNumber: formData.get("commercialRegistrationNumber") || undefined,
     vatNumber: formData.get("vatNumber") || undefined,
     showInStore: formData.get("showInStore") === "on",
-    repIds,
   });
 
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
 
   const supabase = createSupabaseServerClient();
-  const { data: customer, error } = await supabase
-    .from("customers")
-    .insert({
-      name: parsed.data.name,
-      shop_name: parsed.data.shopName ?? null,
-      phone: parsed.data.phone ?? null,
-      address: parsed.data.address ?? null,
-      city_id: parsed.data.cityId ?? null,
-      notes: parsed.data.notes ?? null,
-      google_maps_link: parsed.data.googleMapsLink ?? null,
-      commercial_registration_number: parsed.data.commercialRegistrationNumber ?? null,
-      vat_number: parsed.data.vatNumber ?? null,
-      show_in_store: parsed.data.showInStore,
-    })
-    .select<"id", { id: string }>("id")
-    .single();
+  const { error } = await supabase.from("customers").insert({
+    name: parsed.data.name,
+    shop_name: parsed.data.shopName ?? null,
+    phone: parsed.data.phone ?? null,
+    address: parsed.data.address ?? null,
+    city_id: parsed.data.cityId ?? null,
+    notes: parsed.data.notes ?? null,
+    google_maps_link: parsed.data.googleMapsLink ?? null,
+    commercial_registration_number: parsed.data.commercialRegistrationNumber ?? null,
+    vat_number: parsed.data.vatNumber ?? null,
+    show_in_store: parsed.data.showInStore,
+  });
 
-  if (error || !customer) return { error: error?.message ?? "تعذّر إنشاء العميل" };
-
-  if (parsed.data.repIds.length > 0) {
-    const { error: linkError } = await supabase
-      .from("customer_reps")
-      .insert(parsed.data.repIds.map((repId) => ({ customer_id: customer.id, rep_id: repId })));
-    if (linkError) return { error: linkError.message };
-  }
+  if (error) return { error: error.message };
 
   revalidatePath("/customers");
   return { success: true };
@@ -69,8 +55,6 @@ export async function updateCustomerAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const repIds = formData.getAll("repIds").filter((v): v is string => typeof v === "string" && v.length > 0);
-
   const parsed = updateCustomerSchema.safeParse({
     id: formData.get("id"),
     name: formData.get("name"),
@@ -83,7 +67,6 @@ export async function updateCustomerAction(
     commercialRegistrationNumber: formData.get("commercialRegistrationNumber") || undefined,
     vatNumber: formData.get("vatNumber") || undefined,
     showInStore: formData.get("showInStore") === "on",
-    repIds,
   });
 
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
@@ -106,19 +89,6 @@ export async function updateCustomerAction(
     .eq("id", parsed.data.id);
 
   if (error) return { error: error.message };
-
-  const { error: deleteError } = await supabase
-    .from("customer_reps")
-    .delete()
-    .eq("customer_id", parsed.data.id);
-  if (deleteError) return { error: deleteError.message };
-
-  if (parsed.data.repIds.length > 0) {
-    const { error: linkError } = await supabase
-      .from("customer_reps")
-      .insert(parsed.data.repIds.map((repId) => ({ customer_id: parsed.data.id, rep_id: repId })));
-    if (linkError) return { error: linkError.message };
-  }
 
   revalidatePath("/customers");
   revalidatePath(`/customers/${parsed.data.id}`);

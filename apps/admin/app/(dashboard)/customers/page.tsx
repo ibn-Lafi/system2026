@@ -21,8 +21,6 @@ type Customer = {
   show_in_store: boolean;
   city_id: string | null;
 };
-type CustomerRepRow = { customer_id: string; rep_id: string };
-type Rep = { id: string; name: string };
 type City = { id: string; name: string };
 type UnpaidInvoiceRow = { id: string; invoice_number: number; customer_id: string; total_amount: number };
 type CustomerPaymentRow = { invoice_id: string | null; amount: number };
@@ -62,42 +60,20 @@ export default async function CustomersPage({
     .order("name");
   if (searchParams.cityId) customersQuery = customersQuery.eq("city_id", searchParams.cityId);
 
-  const [
-    { data: customers },
-    { data: customerReps },
-    { data: reps },
-    { data: cities },
-    { data: unpaidInvoices },
-    { data: customerPayments },
-  ] = await Promise.all([
-    customersQuery,
-    supabase.from("customer_reps").select<"customer_id, rep_id", CustomerRepRow>("customer_id, rep_id"),
-    supabase
-      .from("profiles")
-      .select<"id, name", Rep>("id, name")
-      .eq("role", "rep")
-      .eq("is_active", true)
-      .order("name"),
-    supabase.from("cities").select<"id, name", City>("id, name").order("name"),
-    supabase
-      .from("invoices")
-      .select<"id, invoice_number, customer_id, total_amount", UnpaidInvoiceRow>(
-        "id, invoice_number, customer_id, total_amount",
-      )
-      .in("status", ["unpaid", "partial"]),
-    supabase.from("payments").select<"invoice_id, amount", CustomerPaymentRow>("invoice_id, amount"),
-  ]);
+  const [{ data: customers }, { data: cities }, { data: unpaidInvoices }, { data: customerPayments }] =
+    await Promise.all([
+      customersQuery,
+      supabase.from("cities").select<"id, name", City>("id, name").order("name"),
+      supabase
+        .from("invoices")
+        .select<"id, invoice_number, customer_id, total_amount", UnpaidInvoiceRow>(
+          "id, invoice_number, customer_id, total_amount",
+        )
+        .in("status", ["unpaid", "partial"]),
+      supabase.from("payments").select<"invoice_id, amount", CustomerPaymentRow>("invoice_id, amount"),
+    ]);
 
-  const repNameById = new Map((reps ?? []).map((r) => [r.id, r.name]));
   const cityNameById = new Map((cities ?? []).map((c) => [c.id, c.name]));
-  const repIdsByCustomer = new Map<string, string[]>();
-  const repsByCustomer = new Map<string, string[]>();
-  for (const cr of customerReps ?? []) {
-    repIdsByCustomer.set(cr.customer_id, [...(repIdsByCustomer.get(cr.customer_id) ?? []), cr.rep_id]);
-    const list = repsByCustomer.get(cr.customer_id) ?? [];
-    list.push(repNameById.get(cr.rep_id) ?? "—");
-    repsByCustomer.set(cr.customer_id, list);
-  }
 
   const paidByInvoice = new Map<string, number>();
   for (const p of customerPayments ?? []) {
@@ -117,7 +93,7 @@ export default async function CustomersPage({
       <PageHeader
         breadcrumb={<Breadcrumb items={["لوحة التحكم", "العملاء"]} />}
         title="العملاء"
-        subtitle="إدارة العملاء وربطهم بالمناديب"
+        subtitle="إدارة بيانات العملاء"
         actions={
           <>
             {canCollect && (customers?.length ?? 0) > 0 ? (
@@ -127,7 +103,7 @@ export default async function CustomersPage({
             ) : null}
             {canReturn && (customers?.length ?? 0) > 0 ? (
               <ModalTrigger label="+ تسجيل مرتجع" title="تسجيل مرتجع جديد" variant="outline" size="lg">
-                <ReturnForm customers={customers ?? []} reps={reps ?? []} />
+                <ReturnForm customers={customers ?? []} />
               </ModalTrigger>
             ) : null}
             {canManage ? (
@@ -217,16 +193,6 @@ export default async function CustomersPage({
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" name="showInStore" /> ظاهر بصفحة نقاط البيع العامة
                   </label>
-                  <div>
-                    <p className="mb-1 text-sm">ربط بمندوب/مناديب</p>
-                    <div className="flex flex-col gap-1">
-                      {(reps ?? []).map((r) => (
-                        <label key={r.id} className="flex items-center gap-2 text-sm">
-                          <input type="checkbox" name="repIds" value={r.id} /> {r.name}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
                 </ActionForm>
                 </ModalTrigger>
               </>
@@ -261,7 +227,6 @@ export default async function CustomersPage({
                 <th>المحل</th>
                 <th>المدينة</th>
                 <th>الجوال</th>
-                <th>المناديب</th>
                 <th>بالمتجر</th>
                 <th>الموقع</th>
                 <th>كشف الحساب</th>
@@ -275,7 +240,6 @@ export default async function CustomersPage({
                   <td>{c.shop_name ?? "—"}</td>
                   <td>{c.city_id ? cityNameById.get(c.city_id) ?? "—" : "—"}</td>
                   <td>{c.phone ?? "—"}</td>
-                  <td>{(repsByCustomer.get(c.id) ?? []).join("، ") || "—"}</td>
                   <td>{c.show_in_store ? "نعم" : "لا"}</td>
                   <td>
                     {c.google_maps_link ? (
@@ -355,22 +319,6 @@ export default async function CustomersPage({
                             />{" "}
                             ظاهر بصفحة نقاط البيع العامة
                           </label>
-                          <div>
-                            <p className="mb-1 text-sm">ربط بمندوب/مناديب</p>
-                            <div className="flex flex-col gap-1">
-                              {(reps ?? []).map((r) => (
-                                <label key={r.id} className="flex items-center gap-2 text-sm">
-                                  <input
-                                    type="checkbox"
-                                    name="repIds"
-                                    value={r.id}
-                                    defaultChecked={(repIdsByCustomer.get(c.id) ?? []).includes(r.id)}
-                                  />{" "}
-                                  {r.name}
-                                </label>
-                              ))}
-                            </div>
-                          </div>
                         </ActionForm>
                       </ModalTrigger>
                     </td>

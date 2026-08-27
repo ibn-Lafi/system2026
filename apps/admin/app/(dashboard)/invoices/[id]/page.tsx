@@ -14,7 +14,6 @@ type InvoiceDetail = {
   qr_code_data: string;
   payment_method: string;
   status: string;
-  rep_id: string;
   customer_id: string;
   discount_percentage: number;
   branch_id: string | null;
@@ -50,17 +49,17 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
   const { data: invoice } = await supabase
     .from("invoices")
     .select<
-      "id, invoice_number, invoice_date, subtotal, vat_amount, total_amount, qr_code_data, payment_method, status, rep_id, customer_id, discount_percentage, branch_id, notes",
+      "id, invoice_number, invoice_date, subtotal, vat_amount, total_amount, qr_code_data, payment_method, status, customer_id, discount_percentage, branch_id, notes",
       InvoiceDetail
     >(
-      "id, invoice_number, invoice_date, subtotal, vat_amount, total_amount, qr_code_data, payment_method, status, rep_id, customer_id, discount_percentage, branch_id, notes",
+      "id, invoice_number, invoice_date, subtotal, vat_amount, total_amount, qr_code_data, payment_method, status, customer_id, discount_percentage, branch_id, notes",
     )
     .eq("id", params.id)
     .single();
 
   if (!invoice) notFound();
 
-  const [{ data: items }, { data: rep }, { data: customer }, { data: products }, { data: units }, { data: branch }, { data: settings }] =
+  const [{ data: items }, { data: customer }, { data: products }, { data: units }, { data: branch }, { data: settings }] =
     await Promise.all([
       supabase
         .from("invoice_items")
@@ -69,11 +68,6 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
           InvoiceItemRow
         >("id, product_id, unit_id, quantity_in_unit, unit_price, subtotal")
         .eq("invoice_id", invoice.id),
-      supabase
-        .from("profiles")
-        .select<"name", { name: string }>("name")
-        .eq("id", invoice.rep_id)
-        .single(),
       supabase
         .from("customers")
         .select<
@@ -138,7 +132,6 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
         customerVatNumber={customer?.vat_number}
         customerAddress={customer?.address}
         branchName={branch?.name}
-        repName={rep?.name}
         discountPercentage={invoice.discount_percentage}
         items={printItems}
         subtotal={invoice.subtotal}

@@ -10,7 +10,6 @@ type InvoiceRow = {
   total_amount: number;
   payment_method: string;
   status: string;
-  rep_id: string;
   customer_id: string;
   discount_percentage: number;
 };
@@ -30,7 +29,6 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 type InvoiceSearchParams = {
-  repId?: string;
   customerId?: string;
   status?: string;
   paymentMethod?: string;
@@ -59,15 +57,12 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
   let query = supabase
     .from("invoices")
     .select<
-      "id, invoice_number, invoice_date, total_amount, payment_method, status, rep_id, customer_id, discount_percentage",
+      "id, invoice_number, invoice_date, total_amount, payment_method, status, customer_id, discount_percentage",
       InvoiceRow
-    >(
-      "id, invoice_number, invoice_date, total_amount, payment_method, status, rep_id, customer_id, discount_percentage",
-    )
+    >("id, invoice_number, invoice_date, total_amount, payment_method, status, customer_id, discount_percentage")
     .order("invoice_number", { ascending: false })
     .limit(100);
 
-  if (searchParams.repId) query = query.eq("rep_id", searchParams.repId);
   if (searchParams.customerId) query = query.eq("customer_id", searchParams.customerId);
   if (searchParams.status) {
     query = query.eq("status", searchParams.status as "paid" | "partial" | "unpaid" | "cancelled");
@@ -78,12 +73,8 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
   if (searchParams.from) query = query.gte("invoice_date", searchParams.from);
   if (searchParams.to) query = query.lte("invoice_date", `${searchParams.to}T23:59:59`);
 
-  const [{ data: invoices }, { data: reps }, { data: customers }] = await Promise.all([
+  const [{ data: invoices }, { data: customers }] = await Promise.all([
     query,
-    supabase
-      .from("profiles")
-      .select<"id, name", { id: string; name: string }>("id, name")
-      .eq("role", "rep"),
     supabase
       .from("customers")
       .select<"id, name, shop_name", { id: string; name: string; shop_name: string | null }>(
@@ -91,7 +82,6 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
       ),
   ]);
 
-  const repNameById = new Map((reps ?? []).map((r) => [r.id, r.name]));
   const customerNameById = new Map((customers ?? []).map((c) => [c.id, c.shop_name ?? c.name]));
 
   const now = new Date();
@@ -171,14 +161,6 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
         </div>
 
         <form className="mb-4 flex flex-wrap items-end gap-3 text-sm">
-          <Select name="repId" defaultValue={searchParams.repId ?? ""} className="w-auto">
-            <option value="">كل المناديب</option>
-            {(reps ?? []).map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </Select>
           <Select name="customerId" defaultValue={searchParams.customerId ?? ""} className="w-auto">
             <option value="">كل العملاء</option>
             {(customers ?? []).map((c) => (
@@ -209,7 +191,6 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
               <tr className="border-b border-border text-right text-foreground/60">
                 <th className="py-2">رقم الفاتورة</th>
                 <th>التاريخ</th>
-                <th>المندوب</th>
                 <th>العميل</th>
                 <th>الإجمالي</th>
                 <th>نسبة الخصم</th>
@@ -226,7 +207,6 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
                     </Link>
                   </td>
                   <td>{new Date(inv.invoice_date).toLocaleString("ar-SA")}</td>
-                  <td>{repNameById.get(inv.rep_id) ?? "—"}</td>
                   <td>{customerNameById.get(inv.customer_id) ?? "—"}</td>
                   <td>{formatCurrency(inv.total_amount)}</td>
                   <td>{inv.discount_percentage > 0 ? `${inv.discount_percentage}%` : "—"}</td>

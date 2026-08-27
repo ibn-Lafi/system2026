@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "@system2026/database/server";
 
-type InvoiceRow = { id: string; rep_id: string; status: string };
+type InvoiceRow = { id: string; status: string };
 type InvoiceItemRow = {
   invoice_id: string;
   product_id: string;
@@ -10,7 +10,6 @@ type InvoiceItemRow = {
 };
 
 export type ProfitSummary = {
-  byRep: Map<string, { sales: number; profit: number }>;
   byProduct: Map<string, { sales: number; profit: number; quantity: number }>;
   totalSales: number;
   totalProfit: number;
@@ -26,7 +25,7 @@ export async function getProfitSummary(range?: ProfitDateRange): Promise<ProfitS
 
   let invoiceQuery = supabase
     .from("invoices")
-    .select<"id, rep_id, status", InvoiceRow>("id, rep_id, status")
+    .select<"id, status", InvoiceRow>("id, status")
     .neq("status", "cancelled");
   if (range?.from) invoiceQuery = invoiceQuery.gte("invoice_date", range.from);
   if (range?.to) invoiceQuery = invoiceQuery.lte("invoice_date", range.to);
@@ -45,26 +44,16 @@ export async function getProfitSummary(range?: ProfitDateRange): Promise<ProfitS
           .in("invoice_id", invoiceIds)
       : { data: [] as InvoiceItemRow[] };
 
-  const repIdByInvoiceId = new Map((invoices ?? []).map((inv) => [inv.id, inv.rep_id]));
-  const byRep = new Map<string, { sales: number; profit: number }>();
   const byProduct = new Map<string, { sales: number; profit: number; quantity: number }>();
   let totalSales = 0;
   let totalProfit = 0;
 
   for (const item of items ?? []) {
-    const repId = repIdByInvoiceId.get(item.invoice_id);
-    if (!repId) continue;
-
     const sale = item.unit_price * item.quantity_in_base_unit;
     const profit = (item.unit_price - item.cost_price) * item.quantity_in_base_unit;
 
     totalSales += sale;
     totalProfit += profit;
-
-    const repEntry = byRep.get(repId) ?? { sales: 0, profit: 0 };
-    repEntry.sales += sale;
-    repEntry.profit += profit;
-    byRep.set(repId, repEntry);
 
     const productEntry = byProduct.get(item.product_id) ?? { sales: 0, profit: 0, quantity: 0 };
     productEntry.sales += sale;
@@ -73,5 +62,5 @@ export async function getProfitSummary(range?: ProfitDateRange): Promise<ProfitS
     byProduct.set(item.product_id, productEntry);
   }
 
-  return { byRep, byProduct, totalSales, totalProfit };
+  return { byProduct, totalSales, totalProfit };
 }

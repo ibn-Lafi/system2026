@@ -11,7 +11,6 @@ export const createCustomerSchema = z.object({
   commercialRegistrationNumber: z.string().optional(),
   vatNumber: z.string().optional(),
   showInStore: z.boolean().default(false),
-  repIds: z.array(z.string().uuid()).default([]),
 });
 
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
