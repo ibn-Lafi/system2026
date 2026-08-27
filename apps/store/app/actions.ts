@@ -20,7 +20,7 @@ export async function submitStoreLeadAction(
 
   const supabase = createSupabaseServerClient();
   const { error } = await supabase.from("store_leads").insert({
-    phone_number: `+966${parsed.data.phoneNumber}`,
+    phone_number: `+${parsed.data.phoneNumber}`,
     desired_store: parsed.data.desiredStore,
   });
 

@@ -11,7 +11,7 @@ export default async function HomePage() {
   const settings = await getStoreSettings();
 
   if (settings.show_landing_page) {
-    return <LandingHero heroKicker={settings.hero_kicker} heroTitle={settings.hero_title} />;
+    return <LandingHero />;
   }
 
   const [products, locations, sections] = await Promise.all([
