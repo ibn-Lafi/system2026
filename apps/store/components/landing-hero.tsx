@@ -116,9 +116,9 @@ export function LandingHero() {
 
   return (
     <main
-      className={`relative flex min-h-screen flex-col overflow-hidden bg-[#006B6B] text-background ${thmanyahSans.className}`}
+      className={`relative min-h-screen overflow-hidden bg-[#006B6B] text-background ${thmanyahSans.className}`}
     >
-      <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-12 lg:px-8 lg:py-16">
+      <div className="relative z-10 px-5 pt-8 pb-10 lg:px-8 lg:pt-10 lg:pb-14">
         <div className="mx-auto w-full max-w-md">
           <h1 className="text-2xl font-black leading-[1.25] lg:text-[36px]">وش تتمنى يكون عندنا؟ 👀</h1>
           <p className="mt-2.5 text-xs leading-relaxed text-background/70 lg:mt-3 lg:text-sm">
@@ -168,30 +168,30 @@ export function LandingHero() {
               {state.error ? <p className="text-xs text-red-400 lg:text-sm">{state.error}</p> : null}
             </form>
           )}
-        </div>
-      </div>
 
-      <div className="relative z-10 pb-8 text-center lg:pb-10">
-        <p className="text-xs font-bold text-background/40 lg:text-sm">تابعنا</p>
-        <div className="mt-3 flex items-center justify-center gap-4">
-          <a
-            href="https://www.instagram.com/sbaah.sa?igsi=Zzd2ZHh0ZWxoZmIx&utm_source=qr"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="إنستغرام"
-            className="text-background/40 transition-colors hover:text-background/70"
-          >
-            <InstagramIcon className="h-5 w-5" />
-          </a>
-          <a
-            href="https://www.tiktok.com/@sbaah.sa?_r=1&_t=ZS-99EXjH1nFZt"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="تيك توك"
-            className="text-background/40 transition-colors hover:text-background/70"
-          >
-            <TiktokIcon className="h-5 w-5" />
-          </a>
+          <div className="mt-6 text-center lg:mt-8">
+            <p className="text-xs font-bold text-background/40 lg:text-sm">تابعنا</p>
+            <div className="mt-3 flex items-center justify-center gap-4">
+              <a
+                href="https://www.instagram.com/sbaah.sa?igsi=Zzd2ZHh0ZWxoZmIx&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="إنستغرام"
+                className="text-background/40 transition-colors hover:text-background/70"
+              >
+                <InstagramIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="https://www.tiktok.com/@sbaah.sa?_r=1&_t=ZS-99EXjH1nFZt"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="تيك توك"
+                className="text-background/40 transition-colors hover:text-background/70"
+              >
+                <TiktokIcon className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </main>
