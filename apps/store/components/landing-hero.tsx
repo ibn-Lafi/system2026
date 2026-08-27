@@ -129,11 +129,11 @@ export function LandingHero() {
     >
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-4 lg:px-8 lg:py-14">
         <div className="mx-auto w-full max-w-md">
-          <div className="mb-2 flex justify-center lg:mb-3">
+          <div className="mb-6 flex justify-center lg:mb-8">
             <div
               dir="ltr"
               style={thmanyahSans.style}
-              className="inline-block whitespace-nowrap rounded-full border border-background/25 bg-background/10 px-5 py-2 lg:px-7 lg:py-2.5"
+              className="inline-block cursor-pointer whitespace-nowrap rounded-full border border-background/25 bg-background/10 px-5 py-2 shadow-lg transition-transform hover:scale-105 hover:bg-background/20 active:scale-95 lg:px-7 lg:py-2.5"
             >
               <span className="text-3xl font-black lg:text-5xl">SBAAH </span>
               <span className="text-4xl font-black lg:text-6xl">7</span>
@@ -161,7 +161,7 @@ export function LandingHero() {
               <ShareButton />
             </div>
           ) : (
-            <form action={formAction} className="mt-6 space-y-3 lg:mt-8 lg:space-y-4">
+            <form action={formAction} className="mt-4 space-y-3 lg:mt-5 lg:space-y-4">
               <div>
                 <label htmlFor="phoneNumber" className="mb-1 block text-xs text-background/70 lg:mb-1.5 lg:text-sm">
                   رقمك
