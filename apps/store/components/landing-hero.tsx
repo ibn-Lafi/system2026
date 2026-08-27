@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { submitStoreLeadAction, type SubmitLeadState } from "../app/actions";
 
@@ -29,6 +30,18 @@ function SubmitButton() {
 
 export function LandingHero({ heroKicker, heroTitle }: { heroKicker: string; heroTitle: string }) {
   const [state, formAction] = useFormState(submitStoreLeadAction, initialState);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    // React لا يضمن ظهور خاصية muted بالـ HTML المُرسَل من السيرفر، والمتصفحات
+    // تسمح بالتشغيل التلقائي فقط للفيديو المكتوم فعليًا وقت التحليل الأولي —
+    // فبدونها يرفض المتصفح التشغيل التلقائي ويظهر زر تشغيل بدل ذلك. ضبطها هنا
+    // مباشرة على عنصر الفيديو يضمن اعتباره مكتومًا فعليًا قبل محاولة التشغيل.
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    void video.play();
+  }, []);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-foreground text-background">
@@ -37,11 +50,13 @@ export function LandingHero({ heroKicker, heroTitle }: { heroKicker: string; her
           الافتراضي) عن الكمبيوتر (source بـ media للشاشات الأوسع من 768px)،
           لأن كل فيديو مقصوص/مُصوَّر بزاوية مناسبة لعرض شاشته. */}
       <video
+        ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
         autoPlay
         muted
         loop
         playsInline
+        controls={false}
         aria-hidden="true"
       >
         <source src="/videos/landing-hero-bg.mp4" media="(min-width: 768px)" type="video/mp4" />
