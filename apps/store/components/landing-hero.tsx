@@ -112,7 +112,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       aria-label="أرسل"
-      className="absolute bottom-2.5 end-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-foreground/10 text-foreground transition-opacity hover:bg-foreground/15 disabled:opacity-50 lg:bottom-3 lg:end-3 lg:h-9 lg:w-9"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-foreground transition-opacity hover:bg-foreground/15 disabled:opacity-50 lg:h-9 lg:w-9"
     >
       <FlyingArrowIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
     </button>
@@ -128,6 +128,8 @@ export function LandingHero() {
     >
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-4 lg:px-8 lg:py-14">
         <div className="mx-auto w-full max-w-md">
+          {/* eslint-disable-next-line @next/next/no-img-element -- شعار SVG ثابت، لا حاجة لتحسين next/image */}
+          <img src="/logo-sbaah.svg" alt="سبعة" className="mb-4 h-9 w-auto lg:mb-5 lg:h-12" />
           <h1 className="text-2xl font-black leading-[1.25] lg:text-[36px]">وش تتمنى يكون عندنا؟ 👀</h1>
           <p className="mt-2.5 text-xs leading-relaxed text-background/70 lg:mt-3 lg:text-sm">
             شيء جديد جاي للمنطقة…
@@ -169,7 +171,7 @@ export function LandingHero() {
                 <label htmlFor="desiredStore" className="mb-1 block text-xs text-background/70 lg:mb-1.5 lg:text-sm">
                   وش تتمنى نفتح؟
                 </label>
-                <div className="relative">
+                <div className="flex items-end gap-2 rounded-3xl bg-background px-3.5 py-2.5 shadow-lg lg:px-4 lg:py-3.5">
                   <textarea
                     id="desiredStore"
                     name="desiredStore"
@@ -177,7 +179,7 @@ export function LandingHero() {
                     rows={1}
                     onInput={autoGrowTextarea}
                     placeholder="اكتب أمنيتك.."
-                    className="w-full resize-none overflow-hidden rounded-3xl bg-background px-3.5 py-2.5 pe-12 text-xs text-foreground placeholder:text-foreground/35 shadow-lg focus:outline-none lg:px-4 lg:py-3.5 lg:pe-14 lg:text-sm"
+                    className="w-full flex-1 resize-none overflow-hidden bg-transparent text-xs text-foreground placeholder:text-foreground/35 focus:outline-none lg:text-sm"
                   />
                   <SubmitButton />
                 </div>
