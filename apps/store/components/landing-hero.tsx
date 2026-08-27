@@ -165,20 +165,22 @@ export function LandingHero() {
                   className="w-full rounded-full bg-background px-3.5 py-2.5 text-right text-xs text-foreground shadow-lg placeholder:text-foreground/35 focus:outline-none lg:px-4 lg:py-3.5 lg:text-sm"
                 />
               </div>
-              <div className="relative">
+              <div>
                 <label htmlFor="desiredStore" className="mb-1 block text-xs text-background/70 lg:mb-1.5 lg:text-sm">
                   وش تتمنى نفتح؟
                 </label>
-                <textarea
-                  id="desiredStore"
-                  name="desiredStore"
-                  required
-                  rows={1}
-                  onInput={autoGrowTextarea}
-                  placeholder="اكتب أمنيتك.."
-                  className="w-full resize-none overflow-hidden rounded-3xl bg-background px-3.5 py-2.5 pe-12 text-xs text-foreground placeholder:text-foreground/35 shadow-lg focus:outline-none lg:px-4 lg:py-3.5 lg:pe-14 lg:text-sm"
-                />
-                <SubmitButton />
+                <div className="relative">
+                  <textarea
+                    id="desiredStore"
+                    name="desiredStore"
+                    required
+                    rows={1}
+                    onInput={autoGrowTextarea}
+                    placeholder="اكتب أمنيتك.."
+                    className="w-full resize-none overflow-hidden rounded-3xl bg-background px-3.5 py-2.5 pe-12 text-xs text-foreground placeholder:text-foreground/35 shadow-lg focus:outline-none lg:px-4 lg:py-3.5 lg:pe-14 lg:text-sm"
+                  />
+                  <SubmitButton />
+                </div>
               </div>
               {state.error ? <p className="text-xs text-red-400 lg:text-sm">{state.error}</p> : null}
             </form>
