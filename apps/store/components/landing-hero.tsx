@@ -129,7 +129,7 @@ export function LandingHero() {
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-4 lg:px-8 lg:py-14">
         <div className="mx-auto w-full max-w-md">
           {/* eslint-disable-next-line @next/next/no-img-element -- شعار SVG ثابت، لا حاجة لتحسين next/image */}
-          <img src="/logo-sbaah.svg" alt="سبعة" className="mb-4 h-9 w-auto lg:mb-5 lg:h-12" />
+          <img src="/logo-sbaah.svg" alt="سبعة" className="mb-4 h-40 w-auto lg:mb-6 lg:h-52" />
           <h1 className="text-2xl font-black leading-[1.25] lg:text-[36px]">وش تتمنى يكون عندنا؟ 👀</h1>
           <p className="mt-2.5 text-xs leading-relaxed text-background/70 lg:mt-3 lg:text-sm">
             شيء جديد جاي للمنطقة…
