@@ -462,6 +462,7 @@ export type Database = {
           show_points_of_sale_section: boolean;
           custom_css: string | null;
           custom_html: string | null;
+          show_landing_page: boolean;
           updated_at: string;
           updated_by: string | null;
         },
@@ -478,8 +479,19 @@ export type Database = {
           show_points_of_sale_section?: boolean;
           custom_css?: string | null;
           custom_html?: string | null;
+          show_landing_page?: boolean;
           updated_by?: string | null;
         }
+      >;
+      store_leads: Table<
+        {
+          id: string;
+          phone_number: string;
+          desired_store: string;
+          created_at: string;
+        },
+        { id?: string; phone_number: string; desired_store: string },
+        never // لا UPDATE/DELETE — للمراجعة فقط
       >;
       store_sections: Table<
         {
@@ -517,6 +529,7 @@ export type Database = {
           show_points_of_sale_section: boolean;
           custom_css: string | null;
           custom_html: string | null;
+          show_landing_page: boolean;
         };
         Relationships: [];
       };

@@ -5,12 +5,18 @@ import { ProductCard } from "../components/product-card";
 import { PointsOfSaleSection } from "../components/points-of-sale-section";
 import { StoreSections } from "../components/store-sections";
 import { WaveDivider } from "../components/wave-divider";
+import { LandingHero } from "../components/landing-hero";
 
 export default async function HomePage() {
-  const [products, locations, settings, sections] = await Promise.all([
+  const settings = await getStoreSettings();
+
+  if (settings.show_landing_page) {
+    return <LandingHero heroKicker={settings.hero_kicker} heroTitle={settings.hero_title} />;
+  }
+
+  const [products, locations, sections] = await Promise.all([
     getStoreProducts(),
     getStorePointsOfSale(),
-    getStoreSettings(),
     getStoreSections(),
   ]);
 
