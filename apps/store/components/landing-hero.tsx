@@ -163,6 +163,30 @@ export function LandingHero() {
               <p className="mt-3 text-base font-black lg:text-lg">وصلت أمنيتك 👀</p>
               <p className="mt-1.5 text-xs text-background/70 lg:text-sm">نشوف… يمكن تكون هي اللي بنحققها</p>
               <ShareButton />
+
+              <div className="mt-5 lg:mt-6">
+                <p className="text-xs font-bold text-background/70 lg:text-sm">تابعنا عشان تكون أول من يعرف 👀</p>
+                <div className="mt-3 flex items-center justify-center gap-3">
+                  <a
+                    href="https://www.instagram.com/sbaah.sa?igsi=Zzd2ZHh0ZWxoZmIx&utm_source=qr"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-full bg-background px-4 py-2.5 text-xs font-bold text-foreground shadow-lg transition-transform hover:scale-105 active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
+                  >
+                    <InstagramIcon className="h-4 w-4 lg:h-5 lg:w-5" />
+                    انستغرام
+                  </a>
+                  <a
+                    href="https://www.tiktok.com/@sbaah.sa?_r=1&_t=ZS-99EXjH1nFZt"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-full bg-background px-4 py-2.5 text-xs font-bold text-foreground shadow-lg transition-transform hover:scale-105 active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
+                  >
+                    <TiktokIcon className="h-4 w-4 lg:h-5 lg:w-5" />
+                    تيك توك
+                  </a>
+                </div>
+              </div>
             </div>
           ) : (
             <form action={formAction} className="mt-4 space-y-3 lg:mt-5 lg:space-y-4">
@@ -202,29 +226,31 @@ export function LandingHero() {
             </form>
           )}
 
-          <div className="mt-6 text-center lg:mt-8">
-            <p className="text-xs font-bold text-background/40 lg:text-sm">تابعنا</p>
-            <div className="mt-3 flex items-center justify-center gap-4">
-              <a
-                href="https://www.instagram.com/sbaah.sa?igsi=Zzd2ZHh0ZWxoZmIx&utm_source=qr"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="إنستغرام"
-                className="text-background/40 transition-colors hover:text-background/70"
-              >
-                <InstagramIcon className="h-5 w-5" />
-              </a>
-              <a
-                href="https://www.tiktok.com/@sbaah.sa?_r=1&_t=ZS-99EXjH1nFZt"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="تيك توك"
-                className="text-background/40 transition-colors hover:text-background/70"
-              >
-                <TiktokIcon className="h-5 w-5" />
-              </a>
+          {state.success ? null : (
+            <div className="mt-6 text-center lg:mt-8">
+              <p className="text-xs font-bold text-background/40 lg:text-sm">تابعنا</p>
+              <div className="mt-3 flex items-center justify-center gap-4">
+                <a
+                  href="https://www.instagram.com/sbaah.sa?igsi=Zzd2ZHh0ZWxoZmIx&utm_source=qr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="إنستغرام"
+                  className="text-background/40 transition-colors hover:text-background/70"
+                >
+                  <InstagramIcon className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://www.tiktok.com/@sbaah.sa?_r=1&_t=ZS-99EXjH1nFZt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="تيك توك"
+                  className="text-background/40 transition-colors hover:text-background/70"
+                >
+                  <TiktokIcon className="h-5 w-5" />
+                </a>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </main>
