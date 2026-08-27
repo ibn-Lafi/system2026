@@ -129,7 +129,13 @@ export function LandingHero() {
 
           {state.success ? (
             <div className="mt-6 text-center lg:mt-8">
-              <FlyingArrowIcon className="mx-auto h-14 w-14 animate-bounce lg:h-16 lg:w-16" />
+              <span
+                role="img"
+                aria-label="سهم يطير"
+                className="mx-auto block w-fit animate-bounce text-6xl leading-none lg:text-7xl"
+              >
+                🚀
+              </span>
               <p className="mt-3 text-base font-black lg:text-lg">وصلت أمنيتك 👀</p>
               <p className="mt-1.5 text-xs text-background/70 lg:text-sm">نشوف… يمكن تكون هي اللي بنحققها</p>
               <ShareButton />
