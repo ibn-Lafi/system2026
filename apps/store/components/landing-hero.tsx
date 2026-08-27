@@ -146,7 +146,7 @@ export function LandingHero() {
           </div>
           <h1 className="text-center text-2xl font-black leading-[1.25] lg:text-[36px]">وش تتمنى يكون عندنا؟ 👀</h1>
           <p className="mt-2.5 text-center text-xs leading-relaxed text-background/70 lg:mt-3 lg:text-sm">
-            شيء جديد جاي للمنطقة…
+            شيء جديد جاي للجموم…
             <br />
             لكن قبل ما نكشفه، وش تتمنى تشوف عندنا؟
           </p>
