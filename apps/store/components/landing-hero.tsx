@@ -116,7 +116,7 @@ export function LandingHero() {
 
   return (
     <main
-      className={`relative flex min-h-screen flex-col overflow-hidden bg-[#006B6B] text-background ${thmanyahSans.className}`}
+      className={`relative flex min-h-dvh flex-col overflow-hidden bg-[#006B6B] text-background ${thmanyahSans.className}`}
     >
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-4 lg:px-8 lg:py-14">
         <div className="mx-auto w-full max-w-md">
