@@ -124,21 +124,24 @@ export function LandingHero() {
 
   return (
     <main
+      style={{ fontFeatureSettings: "normal" }}
       className={`relative flex min-h-dvh flex-col overflow-hidden bg-[#006B6B] text-background ${thmanyahSans.className}`}
     >
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-4 lg:px-8 lg:py-14">
         <div className="mx-auto w-full max-w-md">
-          <div
-            dir="ltr"
-            style={thmanyahSans.style}
-            className="mb-4 whitespace-nowrap text-center lg:mb-6 lg:text-right"
-          >
-            <span className="text-4xl font-black lg:text-[56px]">SBAAH </span>
-            <span className="text-5xl font-black lg:text-[64px]">7</span>
-            <span className="text-4xl font-black lg:text-[56px]"> سـبـعـة</span>
+          <div className="mb-2 flex justify-center lg:mb-3">
+            <div
+              dir="ltr"
+              style={thmanyahSans.style}
+              className="inline-block whitespace-nowrap rounded-full border border-background/25 bg-background/10 px-5 py-2 lg:px-7 lg:py-2.5"
+            >
+              <span className="text-3xl font-black lg:text-5xl">SBAAH </span>
+              <span className="text-4xl font-black lg:text-6xl">7</span>
+              <span className="text-3xl font-black lg:text-5xl"> سـبـعـة</span>
+            </div>
           </div>
-          <h1 className="text-2xl font-black leading-[1.25] lg:text-[36px]">وش تتمنى يكون عندنا؟ 👀</h1>
-          <p className="mt-2.5 text-xs leading-relaxed text-background/70 lg:mt-3 lg:text-sm">
+          <h1 className="text-center text-2xl font-black leading-[1.25] lg:text-[36px]">وش تتمنى يكون عندنا؟ 👀</h1>
+          <p className="mt-2.5 text-center text-xs leading-relaxed text-background/70 lg:mt-3 lg:text-sm">
             شيء جديد جاي للمنطقة…
             <br />
             لكن قبل ما نكشفه، وش تتمنى تشوف عندنا؟
