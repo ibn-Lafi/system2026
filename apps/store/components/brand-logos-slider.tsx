@@ -31,7 +31,7 @@ const LOGOS: { key: string; highlight?: boolean; node: React.ReactNode }[] = [
     key: "sbaah",
     highlight: true,
     node: (
-      <span className={`${thmanyahSans.className} whitespace-nowrap text-3xl font-black lg:text-4xl`}>سـبـعـة</span>
+      <span className={`${thmanyahSans.className} whitespace-nowrap text-3xl font-black lg:text-4xl`}>سبعة</span>
     ),
   },
 ];

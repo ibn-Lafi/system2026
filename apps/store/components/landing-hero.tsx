@@ -119,18 +119,30 @@ export function LandingHero() {
       <div className="relative z-10 flex flex-1 flex-col justify-center px-5 py-4 lg:px-8 lg:py-14">
         <div className="mx-auto w-full max-w-md">
           <div className="-mt-10 mb-10 flex justify-center lg:-mt-6 lg:mb-14">
-            <div
-              dir="ltr"
-              style={{
-                ...thmanyahSans.style,
-                textShadow:
-                  "1px 1px 0 #00595a, 2px 2px 0 #00595a, 3px 3px 0 #003f40, 4px 4px 0 #003f40, 5px 5px 0 #002627, 6px 7px 12px rgba(0,0,0,0.55)",
-              }}
-              className="inline-block cursor-pointer whitespace-nowrap transition-transform hover:scale-105 active:scale-95"
-            >
-              <span className="text-3xl font-black lg:text-5xl">SBAAH </span>
-              <span className="text-4xl font-black lg:text-6xl">7</span>
-              <span className="text-3xl font-black lg:text-5xl"> سـبـعـة</span>
+            <div className="inline-flex cursor-pointer flex-col items-center transition-transform hover:scale-105 active:scale-95">
+              <div className="flex items-center gap-3 lg:gap-4">
+                <span
+                  style={{
+                    ...thmanyahSans.style,
+                    textShadow: "2px 3px 0 #00504f, 0 10px 22px rgba(0,0,0,0.35)",
+                  }}
+                  className="text-[42px] font-black leading-none lg:text-[64px]"
+                >
+                  سبعة
+                </span>
+                <span
+                  style={thmanyahSans.style}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F5C860] text-xl font-black leading-none text-[#00504f] shadow-[0_4px_16px_rgba(0,0,0,0.35)] lg:h-[52px] lg:w-[52px] lg:text-3xl"
+                >
+                  7
+                </span>
+              </div>
+              <span
+                dir="ltr"
+                className="mt-2 text-[10px] font-bold uppercase tracking-[0.4em] text-background/45 lg:mt-2.5 lg:text-xs"
+              >
+                SBAAH
+              </span>
             </div>
           </div>
           <h1 className="text-center text-2xl font-black leading-[1.25] lg:text-[36px]">وش تتمنى يكون عندنا؟ 👀</h1>
