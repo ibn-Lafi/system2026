@@ -1,5 +1,17 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Badge, Card, Input, LinkButton, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import {
+  Badge,
+  Card,
+  Input,
+  LinkButton,
+  MetricCard,
+  ModalTrigger,
+  PageHeader,
+  Breadcrumb,
+  RangeChips,
+  Select,
+} from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
@@ -116,7 +128,31 @@ const METHOD_LABELS: Record<string, string> = {
   transfer: "تحويل بنكي",
 };
 
-export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
+function toDateInput(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+type ReportSearchParams = { from?: string; to?: string };
+
+// روابط تحافظ على باقي الفلاتر الحالية وتغيّر/تحذف فقط المفاتيح الممرّرة —
+// نفس نمط صفحتي الفواتير والتقارير.
+function buildHref(customerId: string, current: ReportSearchParams, overrides: Partial<ReportSearchParams>) {
+  const params = new URLSearchParams();
+  const merged = { ...current, ...overrides };
+  for (const [key, value] of Object.entries(merged)) {
+    if (value) params.set(key, value);
+  }
+  const qs = params.toString();
+  return qs ? `/customers/${customerId}?${qs}` : `/customers/${customerId}`;
+}
+
+export default async function CustomerDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: ReportSearchParams;
+}) {
   const supabase = createSupabaseServerClient();
   const role = await getCurrentUserRole();
   const canManage = hasPermission(role, "manage_customers");
@@ -134,7 +170,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   if (!customer) notFound();
 
-  const [{ data: invoices }, { data: payments }, { data: branches }, { data: cities }] = await Promise.all([
+  const [{ data: allInvoices }, { data: allPayments }, { data: branches }, { data: cities }] = await Promise.all([
     supabase
       .from("invoices")
       .select<"id, invoice_number, invoice_date, total_amount, status", InvoiceRow>(
@@ -162,22 +198,60 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   const cityNameById = new Map((cities ?? []).map((c) => [c.id, c.name]));
 
+  // الرصيد المستحق يبقى محسوبًا من كل الفواتير والدفعات دائمًا (بلا فلترة
+  // بفترة) — التقرير المفصّل أدناه فقط (الجدولان + المؤشرات) هو ما يُفلتَر
+  // بالفترة المختارة، بنفس نمط صفحتي الفواتير والتقارير.
   const paidByInvoice = new Map<string, number>();
-  for (const p of payments ?? []) {
+  for (const p of allPayments ?? []) {
     if (!p.invoice_id) continue;
     paidByInvoice.set(p.invoice_id, (paidByInvoice.get(p.invoice_id) ?? 0) + p.amount);
   }
 
-  const totalDebt = (invoices ?? [])
+  const totalDebt = (allInvoices ?? [])
     .filter((inv) => inv.status === "unpaid" || inv.status === "partial")
     .reduce((sum, inv) => sum + (inv.total_amount - (paidByInvoice.get(inv.id) ?? 0)), 0);
+
+  const now = new Date();
+  const last7Days = new Date(now);
+  last7Days.setDate(now.getDate() - 6);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const todayStr = toDateInput(now);
+
+  const QUICK_RANGES: { label: string; from?: string; to?: string }[] = [
+    { label: "آخر 7 أيام", from: toDateInput(last7Days), to: todayStr },
+    { label: "هذا الشهر", from: toDateInput(startOfMonth), to: todayStr },
+    { label: "هذه السنة", from: toDateInput(startOfYear), to: todayStr },
+    { label: "كل الفترات" },
+  ];
+
+  const rangeFrom = searchParams.from;
+  const rangeTo = searchParams.to;
+
+  const invoices = (allInvoices ?? []).filter((inv) => {
+    const d = inv.invoice_date.slice(0, 10);
+    if (rangeFrom && d < rangeFrom) return false;
+    if (rangeTo && d > rangeTo) return false;
+    return true;
+  });
+  const payments = (allPayments ?? []).filter((p) => {
+    const d = p.payment_date.slice(0, 10);
+    if (rangeFrom && d < rangeFrom) return false;
+    if (rangeTo && d > rangeTo) return false;
+    return true;
+  });
+
+  const totalPurchases = invoices
+    .filter((inv) => inv.status !== "cancelled")
+    .reduce((sum, inv) => sum + inv.total_amount, 0);
+  const totalCollected = payments.reduce((sum, p) => sum + p.amount, 0);
 
   return (
     <div className="space-y-6">
       <PageHeader
         breadcrumb={<Breadcrumb items={["لوحة التحكم", "العملاء", customer.shop_name ?? customer.name]} />}
         title={customer.shop_name ?? customer.name}
-        subtitle="كشف حساب العميل: الفواتير، الدفعات، والرصيد المستحق"
+        subtitle="تقرير مفصّل عن مشتريات العميل وسجله الشرائي الكامل"
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -305,8 +379,24 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
         )}
       </Card>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <RangeChips
+          items={QUICK_RANGES.map((r) => ({
+            label: r.label,
+            href: buildHref(customer.id, searchParams, { from: r.from, to: r.to }),
+            active: (searchParams.from ?? "") === (r.from ?? "") && (searchParams.to ?? "") === (r.to ?? ""),
+          }))}
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <MetricCard label="إجمالي المشتريات بالفترة" value={formatCurrency(totalPurchases)} />
+        <MetricCard label="عدد الفواتير بالفترة" value={invoices.length.toString()} />
+        <MetricCard label="المحصَّل بالفترة" value={formatCurrency(totalCollected)} />
+      </div>
+
       <Card>
-        <h2 className="mb-3 font-semibold">الفواتير</h2>
+        <h2 className="mb-3 font-semibold">الفواتير — سجل الشراء الكامل</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -316,10 +406,11 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                 <th>الإجمالي</th>
                 <th>المتبقي</th>
                 <th>الحالة</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {(invoices ?? []).map((inv) => (
+              {invoices.map((inv) => (
                 <tr key={inv.id} className="border-b border-border/50">
                   <td className="py-2">#{inv.invoice_number}</td>
                   <td>{new Date(inv.invoice_date).toLocaleDateString("ar-SA")}</td>
@@ -330,12 +421,17 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                       : "—"}
                   </td>
                   <td>{STATUS_LABELS[inv.status] ?? inv.status}</td>
+                  <td>
+                    <Link href={`/invoices/${inv.id}`} className="text-primary underline">
+                      تفاصيل الفاتورة
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {(invoices?.length ?? 0) === 0 ? <p className="py-4 text-foreground/60">لا توجد فواتير بعد</p> : null}
+        {invoices.length === 0 ? <p className="py-4 text-foreground/60">لا توجد فواتير بهذه الفترة</p> : null}
       </Card>
 
       <Card>
@@ -350,7 +446,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
               </tr>
             </thead>
             <tbody>
-              {(payments ?? []).map((p) => (
+              {payments.map((p) => (
                 <tr key={p.id} className="border-b border-border/50">
                   <td className="py-2">{new Date(p.payment_date).toLocaleDateString("ar-SA")}</td>
                   <td>{formatCurrency(p.amount)}</td>
@@ -360,7 +456,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             </tbody>
           </table>
         </div>
-        {(payments?.length ?? 0) === 0 ? <p className="py-4 text-foreground/60">لا توجد دفعات بعد</p> : null}
+        {payments.length === 0 ? <p className="py-4 text-foreground/60">لا توجد دفعات بهذه الفترة</p> : null}
       </Card>
     </div>
   );

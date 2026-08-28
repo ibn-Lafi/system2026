@@ -30,5 +30,6 @@ export async function recordCustomerPaymentAction(
   if (error) return { error: error.message };
 
   revalidatePath("/customers");
+  revalidatePath("/invoices");
   return { success: true };
 }

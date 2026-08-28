@@ -1,7 +1,20 @@
 import Link from "next/link";
-import { Button, Card, DateRangePicker, LinkButton, RangeChips, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import {
+  Button,
+  Card,
+  DateRangePicker,
+  LinkButton,
+  ModalTrigger,
+  RangeChips,
+  PageHeader,
+  Breadcrumb,
+  Select,
+} from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
+import { getCurrentUserRole } from "../../../lib/get-current-role";
+import { hasPermission } from "../../../lib/permissions";
+import { PaymentForm } from "../collections/payment-form";
 
 type InvoiceRow = {
   id: string;
@@ -51,8 +64,13 @@ function buildHref(current: InvoiceSearchParams, overrides: Partial<InvoiceSearc
   return qs ? `/invoices?${qs}` : "/invoices";
 }
 
+type UnpaidInvoiceRow = { id: string; invoice_number: number; customer_id: string; total_amount: number };
+type CustomerPaymentRow = { invoice_id: string | null; amount: number };
+
 export default async function InvoicesPage({ searchParams }: { searchParams: InvoiceSearchParams }) {
   const supabase = createSupabaseServerClient();
+  const role = await getCurrentUserRole();
+  const canCollect = hasPermission(role, "manage_collections");
 
   let query = supabase
     .from("invoices")
@@ -73,16 +91,37 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
   if (searchParams.from) query = query.gte("invoice_date", searchParams.from);
   if (searchParams.to) query = query.lte("invoice_date", `${searchParams.to}T23:59:59`);
 
-  const [{ data: invoices }, { data: customers }] = await Promise.all([
-    query,
-    supabase
-      .from("customers")
-      .select<"id, name, shop_name", { id: string; name: string; shop_name: string | null }>(
-        "id, name, shop_name",
-      ),
-  ]);
+  const [{ data: invoices }, { data: customers }, { data: unpaidInvoices }, { data: customerPayments }] =
+    await Promise.all([
+      query,
+      supabase
+        .from("customers")
+        .select<"id, name, shop_name", { id: string; name: string; shop_name: string | null }>(
+          "id, name, shop_name",
+        ),
+      supabase
+        .from("invoices")
+        .select<"id, invoice_number, customer_id, total_amount", UnpaidInvoiceRow>(
+          "id, invoice_number, customer_id, total_amount",
+        )
+        .in("status", ["unpaid", "partial"]),
+      supabase.from("payments").select<"invoice_id, amount", CustomerPaymentRow>("invoice_id, amount"),
+    ]);
 
   const customerNameById = new Map((customers ?? []).map((c) => [c.id, c.shop_name ?? c.name]));
+
+  const paidByInvoice = new Map<string, number>();
+  for (const p of customerPayments ?? []) {
+    if (!p.invoice_id) continue;
+    paidByInvoice.set(p.invoice_id, (paidByInvoice.get(p.invoice_id) ?? 0) + p.amount);
+  }
+  const invoicesByCustomer: Record<string, { id: string; invoice_number: number; remaining: number }[]> = {};
+  for (const inv of unpaidInvoices ?? []) {
+    const remaining = inv.total_amount - (paidByInvoice.get(inv.id) ?? 0);
+    if (remaining <= 0) continue;
+    invoicesByCustomer[inv.customer_id] ??= [];
+    invoicesByCustomer[inv.customer_id]!.push({ id: inv.id, invoice_number: inv.invoice_number, remaining });
+  }
 
   const now = new Date();
   const last7Days = new Date(now);
@@ -110,8 +149,20 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
       <PageHeader
         breadcrumb={<Breadcrumb items={["لوحة التحكم", "الفواتير"]} />}
         title="الفواتير"
-        subtitle="كل فواتير البيع — تسجيل المرتجعات والتحصيلات متاح الآن من صفحة العملاء"
-        actions={<LinkButton href="/invoice-requests">طلبات تعديل الفواتير</LinkButton>}
+        subtitle="كل فواتير البيع"
+        actions={
+          <>
+            {canCollect && (customers?.length ?? 0) > 0 ? (
+              <ModalTrigger label="+ تسجيل تحصيل" title="تسجيل تحصيل" variant="outline">
+                <PaymentForm customers={customers ?? []} invoicesByCustomer={invoicesByCustomer} />
+              </ModalTrigger>
+            ) : null}
+            <LinkButton href="/returns" variant="outline">
+              المرتجعات
+            </LinkButton>
+            <LinkButton href="/invoice-requests">طلبات تعديل الفواتير</LinkButton>
+          </>
+        }
       />
 
       <Card>
