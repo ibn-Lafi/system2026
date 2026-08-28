@@ -1,4 +1,4 @@
-import { Badge, Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Badge, Card, Input, MetricCard, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
 import { getCurrentUserRole } from "../../../lib/get-current-role";
@@ -53,6 +53,10 @@ export default async function WarehousePage() {
 
   const productNameById = new Map((products ?? []).map((p) => [p.id, p.name]));
 
+  const totalUnits = (stock ?? []).reduce((sum, s) => sum + s.quantity_available, 0);
+  const lowStockCount = (stock ?? []).filter((s) => s.quantity_available > 0 && s.quantity_available < 10).length;
+  const outOfStockCount = (stock ?? []).filter((s) => s.quantity_available === 0).length;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -87,6 +91,13 @@ export default async function WarehousePage() {
           ) : null
         }
       />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="عدد المنتجات بالمخزون" value={(stock?.length ?? 0).toString()} />
+        <MetricCard label="إجمالي الكمية المتاحة" value={totalUnits.toString()} />
+        <MetricCard label="منتجات منخفضة الكمية" value={lowStockCount.toString()} />
+        <MetricCard label="منتجات نافذة الكمية" value={outOfStockCount.toString()} />
+      </div>
 
       <Card>
         <h2 className="mb-3 font-semibold">الأرصدة الحالية</h2>
