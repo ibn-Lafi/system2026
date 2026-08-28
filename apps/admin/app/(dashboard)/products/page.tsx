@@ -285,20 +285,6 @@ export default async function ProductsPage() {
                             />
                           </div>
                           <div>
-                            <label className="mb-1 block text-sm">الكمية بالمخزون</label>
-                            <Input
-                              name="quantity"
-                              type="number"
-                              step="1"
-                              min="0"
-                              defaultValue={quantityByProductId.get(p.id) ?? 0}
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-1 block text-sm">سبب تعديل الكمية (إن غيّرتها)</label>
-                            <Input name="quantityReason" placeholder="مثال: جرد دوري" />
-                          </div>
-                          <div>
                             <label className="mb-1 block text-sm">الفئة</label>
                             <Select name="categoryId" defaultValue={p.category_id ?? ""}>
                               <option value="">بدون فئة</option>
