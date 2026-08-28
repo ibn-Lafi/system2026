@@ -2,9 +2,10 @@
 -- على قاعدة بيانات اختبار فارغة، ويفشل (exit code != 0) عند أي RAISE EXCEPTION.
 -- هذا ليس Mock — يُنفَّذ فعليًا على Postgres حقيقي بنفس مخطط الإنتاج.
 --
--- ملاحظة: النظام يستخدم مخزون مشترك واحد (warehouse_stock) للأدمن وكل
--- المناديب معًا — لا يوجد "رصيد مخزون خاص بكل مندوب" (rep_inventory) ولا
--- نظام نقل بضاعة بعد الآن (راجع requirements.md §6).
+-- ملاحظة: النظام يستخدم مخزون مشترك واحد (warehouse_stock) — لا يوجد "رصيد
+-- مخزون خاص بكل مندوب" (rep_inventory) ولا نظام نقل بضاعة، ولا مفهوم
+-- "مندوب" إطلاقًا بعد إزالة تطبيق المندوب (apps/rep) وتنظيف قاعدة البيانات
+-- منه بالكامل — الأدمن هو الفاعل الوحيد لكل العمليات المالية/المخزونية.
 --
 -- ملاحظة تقنية: psql لا يستبدل متغيراته (:'name') داخل نصوص $$...$$ (DO
 -- blocks/دوال)، لذلك أي تحقق يحتاج متغيّر psql (مثل invoice_id الناتج من
@@ -25,16 +26,11 @@ $$;
 -- ========== الإعداد ==========
 insert into auth.users (id, email, raw_user_meta_data)
 values
-  ('11111111-1111-1111-1111-111111111111', 'admin@test.local', '{"name":"Admin One","role":"admin"}'),
-  ('22222222-2222-2222-2222-222222222222', 'rep@test.local', '{"name":"Rep One","role":"rep"}');
+  ('11111111-1111-1111-1111-111111111111', 'admin@test.local', '{"name":"Admin One","role":"admin"}');
 
 select pg_temp.assert_true(
   (select count(*) from public.profiles where role = 'admin') = 1,
   'trigger on_auth_user_created لم ينشئ profile للأدمن'
-);
-select pg_temp.assert_true(
-  (select count(*) from public.profiles where role = 'rep') = 1,
-  'trigger on_auth_user_created لم ينشئ profile للمندوب'
 );
 select pg_temp.assert_true(
   (select email from public.profiles where id = '11111111-1111-1111-1111-111111111111') = 'admin@test.local',
@@ -98,15 +94,9 @@ select pg_temp.assert_true(
 
 insert into public.customers (id, name, shop_name, show_in_store, google_maps_link)
 values ('e1111111-0000-0000-0000-000000000001', 'عميل تجريبي', 'محل الاختبار', true, 'https://maps.google.com/xyz');
-insert into public.customer_reps (customer_id, rep_id)
-values ('e1111111-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222');
 
 -- ========== 2. فاتورة بيع + VAT 15% + خصم مباشر من المخزون المشترك (requirements.md §7.3/§7.5) ==========
-set request.jwt.uid = '22222222-2222-2222-2222-222222222222';
-set request.jwt.claims = '{"role":"authenticated","app_metadata":{"role":"rep"}}';
-
 select public.create_invoice_with_stock_check(
-  '22222222-2222-2222-2222-222222222222',
   'e1111111-0000-0000-0000-000000000001',
   jsonb_build_array(jsonb_build_object(
     'product_id', 'b1111111-0000-0000-0000-000000000001',
@@ -122,7 +112,7 @@ select pg_temp.assert_true(
 select pg_temp.assert_true(
   (select (subtotal, vat_amount, total_amount) = (87, 13.05, 100.05)
      from public.invoices where id = :'invoice1_invoice_id'),
-  -- سعر المنتج 5 شامل الضريبة (raجع migration 20260816090000): صافي
+  -- سعر المنتج 5 شامل الضريبة (راجع migration 20260816090000): صافي
   -- الوحدة = 5/1.15 = 4.35، × 20 = 87 subtotal، والضريبة 13.05، والإجمالي
   -- 100.05 (يطابق 20×5 تقريبًا، وليس 100+15%)
   'مجاميع الفاتورة (subtotal/vat/total) يجب أن تكون 87/13.05/100.05 (سعر شامل الضريبة)'
@@ -145,7 +135,6 @@ select pg_temp.assert_true(
 do $$
 begin
   perform public.create_invoice_with_stock_check(
-    '22222222-2222-2222-2222-222222222222',
     'e1111111-0000-0000-0000-000000000001',
     jsonb_build_array(jsonb_build_object(
       'product_id', 'b1111111-0000-0000-0000-000000000001',
@@ -183,7 +172,6 @@ select pg_temp.assert_true(
 select public.process_return(
   'e1111111-0000-0000-0000-000000000001',
   :'invoice1_invoice_id',
-  '22222222-2222-2222-2222-222222222222',
   jsonb_build_array(
     jsonb_build_object('product_id', 'b1111111-0000-0000-0000-000000000001', 'quantity', 5, 'unit_price', 5, 'condition', 'resalable'),
     jsonb_build_object('product_id', 'b1111111-0000-0000-0000-000000000001', 'quantity', 2, 'unit_price', 5, 'condition', 'damaged')
@@ -235,7 +223,6 @@ select pg_temp.assert_true(
 
 -- ========== 6.1 إلغاء فاتورة بفترة السماح بنجاح (فاتورة جديدة بلا مرتجعات) ==========
 select public.create_invoice_with_stock_check(
-  '22222222-2222-2222-2222-222222222222',
   'e1111111-0000-0000-0000-000000000001',
   jsonb_build_array(jsonb_build_object(
     'product_id', 'b1111111-0000-0000-0000-000000000001',
@@ -260,55 +247,10 @@ select pg_temp.assert_true(
   'رصيد المخزون المشترك يجب أن يعود 345 (بيع 4 ثم إلغاء يعيدها بالضبط)'
 );
 
--- ========== 6.2 طلب تعديل بعد فترة السماح + مراجعة الأدمن (requirements.md §7.7) ==========
-select public.create_invoice_with_stock_check(
-  '22222222-2222-2222-2222-222222222222',
-  'e1111111-0000-0000-0000-000000000001',
-  jsonb_build_array(jsonb_build_object(
-    'product_id', 'b1111111-0000-0000-0000-000000000001',
-    'unit_id', 'a1111111-0000-0000-0000-000000000001',
-    'quantity_in_unit', 3
-  )), 'cash'
-) as invoice_id \gset invoice4_
-
-select public.request_invoice_edit(
-  :'invoice4_invoice_id', 'طلب إلغاء بعد فترة السماح', '{"action": "cancel"}'::jsonb
-) as request_id \gset editreq_
-
-select pg_temp.assert_true(
-  (select status from public.invoice_edit_requests where id = :'editreq_request_id') = 'pending',
-  'حالة طلب التعديل عند الإنشاء يجب أن تكون pending'
-);
-
-reset role;
-set request.jwt.uid = '11111111-1111-1111-1111-111111111111';
-set request.jwt.claims = '{"role":"authenticated","app_metadata":{"role":"admin"}}';
-
-select public.review_invoice_edit_request(:'editreq_request_id', 'approved', 'موافق');
-
-select pg_temp.assert_true(
-  (select status from public.invoice_edit_requests where id = :'editreq_request_id') = 'approved',
-  'حالة طلب التعديل بعد موافقة الأدمن يجب أن تكون approved'
-);
-select pg_temp.assert_true(
-  (select status from public.invoices where id = :'invoice4_invoice_id') = 'cancelled',
-  'الفاتورة الرابعة يجب أن تُلغى تلقائيًا عند الموافقة على طلب الإلغاء'
-);
-select pg_temp.assert_true(
-  (select count(*) from public.credit_notes where invoice_id = :'invoice4_invoice_id') = 1,
-  'يجب إنشاء إشعار دائن للفاتورة الرابعة عند موافقة الأدمن على الإلغاء'
-);
-select pg_temp.assert_true(
-  (select quantity_available from public.warehouse_stock
-    where product_id = 'b1111111-0000-0000-0000-000000000001') = 345,
-  'رصيد المخزون المشترك يجب أن يعود 345 (بيع 3 ثم إلغاء عبر موافقة الأدمن يعيدها بالضبط)'
-);
-
--- ========== 6.3 نسبة خصم الفاتورة (0%-25%) — تُحسب داخل قاعدة البيانات ولا تُقرأ من العميل ==========
+-- ========== 6.2 نسبة خصم الفاتورة (0%-25%) — تُحسب داخل قاعدة البيانات ولا تُقرأ من العميل ==========
 -- unit_price لم يعد جزءًا من العقد؛ السعر الحقيقي يُقرأ من products.price
 -- ويُطبَّق عليه الخصم داخل create_invoice_with_stock_check نفسها.
 select public.create_invoice_with_stock_check(
-  '22222222-2222-2222-2222-222222222222',
   'e1111111-0000-0000-0000-000000000001',
   jsonb_build_array(jsonb_build_object(
     'product_id', 'b1111111-0000-0000-0000-000000000001',
@@ -337,7 +279,6 @@ select pg_temp.assert_true(
 do $$
 begin
   perform public.create_invoice_with_stock_check(
-    '22222222-2222-2222-2222-222222222222',
     'e1111111-0000-0000-0000-000000000001',
     jsonb_build_array(jsonb_build_object(
       'product_id', 'b1111111-0000-0000-0000-000000000001',
@@ -354,25 +295,33 @@ exception
     -- الاستثناء المتوقع من create_invoice_with_stock_check نفسها — هذا صحيح
 end $$;
 
--- ========== 7. RLS لكل دور (CLAUDE.md §4-5) ==========
+-- ========== 7. لا يمكن لغير الأدمن إصدار/إلغاء فاتورة أو تسجيل مرتجع ==========
+-- بعد إزالة تطبيق المندوب، الأدمن هو الفاعل الوحيد المخوَّل بهذه العمليات
+-- الحرجة ماليًا/مخزونيًا (راجع migration 20260828000000_remove_rep_schema).
 reset role;
-set request.jwt.uid = '22222222-2222-2222-2222-222222222222';
-set request.jwt.claims = '{"role":"authenticated","app_metadata":{"role":"rep"}}';
-set role authenticated;
+set request.jwt.uid = '11111111-1111-1111-1111-111111111111';
+set request.jwt.claims = '{"role":"authenticated","app_metadata":{"role":"accountant"}}';
 
-select pg_temp.assert_true(
-  (select count(*) from public.suppliers) = 0,
-  'المندوب لا يجب أن يرى أي مورد (RLS)'
-);
-select pg_temp.assert_true(
-  (select count(*) from public.customers) = 1,
-  'المندوب يجب أن يرى عميله المرتبط فقط (RLS)'
-);
-select pg_temp.assert_true(
-  (select count(*) from public.warehouse_stock) = 1,
-  'المندوب يجب أن يرى المخزون المشترك كاملًا (RLS — مخزن واحد للنظام)'
-);
+do $$
+begin
+  perform public.create_invoice_with_stock_check(
+    'e1111111-0000-0000-0000-000000000001',
+    jsonb_build_array(jsonb_build_object(
+      'product_id', 'b1111111-0000-0000-0000-000000000001',
+      'unit_id', 'a1111111-0000-0000-0000-000000000001',
+      'quantity_in_unit', 1
+    )), 'cash'
+  );
+  raise exception 'FAILED: كان يجب رفض إصدار فاتورة من غير الأدمن';
+exception
+  when others then
+    if sqlerrm = 'FAILED: كان يجب رفض إصدار فاتورة من غير الأدمن' then
+      raise;
+    end if;
+    -- الاستثناء المتوقع من الدالة نفسها — هذا صحيح
+end $$;
 
+-- ========== 8. RLS لكل دور (CLAUDE.md §4-5) ==========
 reset role;
 set request.jwt.uid = '11111111-1111-1111-1111-111111111111';
 set request.jwt.claims = '{"role":"authenticated","app_metadata":{"role":"admin"}}';

@@ -32,7 +32,6 @@ export async function createReturnAction(
   const { data: returnId, error } = await supabase.rpc("process_return", {
     p_customer_id: parsed.data.customerId,
     p_invoice_id: parsed.data.invoiceId ?? null,
-    p_rep_id: null,
     p_items: parsed.data.items.map((item) => ({
       product_id: item.productId,
       quantity: item.quantity,

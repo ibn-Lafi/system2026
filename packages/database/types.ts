@@ -201,14 +201,6 @@ export type Database = {
         { id: string; product_id: string; quantity_available: number; created_at: string; updated_at: string },
         { id?: string; product_id: string; quantity_available?: number }
       >;
-      stock_transfers: Table<
-        { id: string; rep_id: string; transfer_date: string; created_by: string; created_at: string; updated_at: string },
-        { id?: string; rep_id: string; created_by: string }
-      >;
-      stock_transfer_items: Table<
-        { id: string; transfer_id: string; product_id: string; quantity: number; created_at: string; updated_at: string },
-        { id?: string; transfer_id: string; product_id: string; quantity: number }
-      >;
       stock_movements: Table<
         {
           id: string;
@@ -268,10 +260,6 @@ export type Database = {
           city_id?: string | null;
         }
       >;
-      customer_reps: Table<
-        { id: string; customer_id: string; rep_id: string; created_at: string },
-        { id?: string; customer_id: string; rep_id: string }
-      >;
       cities: Table<
         { id: string; name: string; created_at: string; updated_at: string },
         { id?: string; name: string }
@@ -302,15 +290,10 @@ export type Database = {
           show_in_store?: boolean;
         }
       >;
-      rep_inventory: Table<
-        { id: string; rep_id: string; product_id: string; quantity_available: number; created_at: string; updated_at: string },
-        { id?: string; rep_id: string; product_id: string; quantity_available?: number }
-      >;
       invoices: Table<
         {
           id: string;
           invoice_number: number;
-          rep_id: string;
           customer_id: string;
           invoice_date: string;
           subtotal: number;
@@ -390,7 +373,6 @@ export type Database = {
           id: string;
           invoice_id: string | null;
           customer_id: string;
-          rep_id: string | null;
           return_date: string;
           total_credit_amount: number;
           created_by: string;
@@ -562,7 +544,6 @@ export type Database = {
     Functions: {
       create_invoice_with_stock_check: {
         Args: {
-          p_rep_id: string;
           p_customer_id: string;
           p_items: Json;
           p_payment_method: Database["public"]["Enums"]["invoice_payment_method"];
@@ -607,15 +588,11 @@ export type Database = {
         Returns: string;
       };
       process_return: {
-        Args: { p_customer_id: string; p_invoice_id: string | null; p_rep_id: string | null; p_items: Json };
+        Args: { p_customer_id: string; p_invoice_id: string | null; p_items: Json };
         Returns: string;
       };
       cancel_invoice_within_grace_period: {
         Args: { p_invoice_id: string; p_reason: string };
-        Returns: string;
-      };
-      request_invoice_edit: {
-        Args: { p_invoice_id: string; p_reason: string; p_requested_changes: Json };
         Returns: string;
       };
       review_invoice_edit_request: {
