@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Badge, Button, Card, DatePicker, Input, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
@@ -245,7 +245,7 @@ export default async function ProductsPage() {
                   </label>
                   <div>
                     <label className="mb-1 block text-sm">تاريخ الصلاحية (إن وُجد)</label>
-                    <Input name="expiryDate" type="date" />
+                    <DatePicker name="expiryDate" />
                   </div>
                 </ActionForm>
               </ModalTrigger>
@@ -394,7 +394,7 @@ export default async function ProductsPage() {
                           </label>
                           <div>
                             <label className="mb-1 block text-sm">تاريخ الصلاحية (إن وُجد)</label>
-                            <Input name="expiryDate" type="date" defaultValue={p.expiry_date ?? ""} />
+                            <DatePicker name="expiryDate" defaultValue={p.expiry_date ?? ""} />
                           </div>
                         </ActionForm>
                       </ModalTrigger>

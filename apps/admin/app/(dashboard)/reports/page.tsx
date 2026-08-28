@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge, Card, BarList, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Badge, Card, BarList, DateRangePicker, PageHeader, Breadcrumb } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { getProfitSummary } from "../../../lib/get-profitability";
@@ -114,19 +114,7 @@ export default async function ReportsPage({
             آخر 30 يوم
           </Link>
           <form className="flex items-center gap-2 text-sm">
-            <input
-              type="date"
-              name="from"
-              defaultValue={searchParams.from ?? ""}
-              className="h-9 rounded-full border border-border bg-background px-3 text-sm"
-            />
-            <span className="text-foreground/50">إلى</span>
-            <input
-              type="date"
-              name="to"
-              defaultValue={searchParams.to ?? ""}
-              className="h-9 rounded-full border border-border bg-background px-3 text-sm"
-            />
+            <DateRangePicker fromName="from" toName="to" defaultFrom={searchParams.from} defaultTo={searchParams.to} />
             <button type="submit" className={periodLinkClass}>
               تطبيق
             </button>

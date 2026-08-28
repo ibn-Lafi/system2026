@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
+import { Card, DatePicker, Input, ModalTrigger, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
@@ -406,7 +406,7 @@ export default async function SupplierDetailPage({
                           </label>
                           <div>
                             <label className="mb-1 block text-sm">تاريخ الصلاحية (إن وُجد)</label>
-                            <Input name="expiryDate" type="date" defaultValue={p.expiry_date ?? ""} />
+                            <DatePicker name="expiryDate" defaultValue={p.expiry_date ?? ""} />
                           </div>
                         </ActionForm>
                       </ModalTrigger>
