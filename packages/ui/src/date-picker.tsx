@@ -26,6 +26,7 @@ function CalendarTriggerIcon() {
 function usePopover() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -43,7 +44,16 @@ function usePopover() {
     };
   }, [open]);
 
-  return { open, setOpen, containerRef };
+  // النافذة المنبثقة absolute داخل هذا العنصر، وهذا الأخير غالبًا ما يكون
+  // داخل حاوية قابلة للتمرير (مثل Modal بـ overflow-y-auto) — فتحها قرب أسفل
+  // حاوية طويلة يجعلها تُرسم خارج الجزء المرئي من التمرير الحالي دون أي إشارة
+  // للمستخدم، فيظن أن التقويم لا يظهر إطلاقًا. نمرّر إليها تلقائيًا عند الفتح.
+  useEffect(() => {
+    if (!open) return;
+    popoverRef.current?.scrollIntoView({ block: "nearest" });
+  }, [open]);
+
+  return { open, setOpen, containerRef, popoverRef };
 }
 
 // yyyy-mm-dd بالتوقيت المحلي — لا نستخدم toISOString() لأنها تحوّل بتوقيت UTC
@@ -82,7 +92,7 @@ export function DatePicker({
   placeholder?: string;
   className?: string;
 }) {
-  const { open, setOpen, containerRef } = usePopover();
+  const { open, setOpen, containerRef, popoverRef } = usePopover();
   const [date, setDate] = useState<Date | undefined>(fromInputValue(defaultValue));
 
   return (
@@ -93,7 +103,7 @@ export function DatePicker({
         <CalendarTriggerIcon />
       </button>
       {open ? (
-        <div className={POPOVER_CLASS}>
+        <div ref={popoverRef} className={POPOVER_CLASS}>
           <Calendar
             mode="single"
             selected={date}
@@ -124,7 +134,7 @@ export function DateRangePicker({
   placeholder?: string;
   className?: string;
 }) {
-  const { open, setOpen, containerRef } = usePopover();
+  const { open, setOpen, containerRef, popoverRef } = usePopover();
   const [range, setRange] = useState<DateRange | undefined>(() => {
     const from = fromInputValue(defaultFrom);
     if (!from) return undefined;
@@ -146,7 +156,7 @@ export function DateRangePicker({
         <CalendarTriggerIcon />
       </button>
       {open ? (
-        <div className={POPOVER_CLASS}>
+        <div ref={popoverRef} className={POPOVER_CLASS}>
           <Calendar
             mode="range"
             selected={range}

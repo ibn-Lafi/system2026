@@ -7,17 +7,63 @@ import {
   updateProductSchema,
   createCategorySchema,
   updateCategorySchema,
-  createUnitSchema,
-  updateUnitSchema,
 } from "@system2026/validation";
-import { uploadImage } from "../../../lib/upload-image";
+import { uploadImage, uploadImages } from "../../../lib/upload-image";
 
 export type ActionState = { error?: string; success?: boolean };
+
+// اسم الوحدة الافتراضية المُنشأة تلقائيًا لأي منتج لا يحدد المستخدم وحدته —
+// صفحة المنتجات العامة لم تعد تعرض اختيار وحدة قياس (راجع CLAUDE.md §10)،
+// بينما يبقى base_unit_id عمودًا إلزاميًا (NOT NULL) تعتمد عليه فواتير
+// الشراء الحية (product_units + create_purchase_invoice). صفحة إضافة منتج
+// المورد ما زالت تُرسل baseUnitId صراحةً وتبقى كما هي.
+const DEFAULT_UNIT_NAME = "قطعة";
+
+async function resolveBaseUnitId(
+  supabase: ReturnType<typeof createSupabaseServerClient>,
+  formBaseUnitId: FormDataEntryValue | null,
+  existingBaseUnitId?: string | null,
+): Promise<{ id?: string; error?: string }> {
+  if (typeof formBaseUnitId === "string" && formBaseUnitId) return { id: formBaseUnitId };
+  if (existingBaseUnitId) return { id: existingBaseUnitId };
+
+  const { data: existingUnit } = await supabase
+    .from("units")
+    .select<"id", { id: string }>("id")
+    .eq("name", DEFAULT_UNIT_NAME)
+    .maybeSingle();
+  if (existingUnit) return { id: existingUnit.id };
+
+  const { data: createdUnit, error } = await supabase
+    .from("units")
+    .insert({ name: DEFAULT_UNIT_NAME })
+    .select<"id", { id: string }>("id")
+    .single();
+  if (!error) return { id: createdUnit.id };
+
+  // تسابق محتمل (طلب آخر أنشأ نفس الوحدة أولًا لتوها) — نعيد القراءة بدل الفشل.
+  const { data: retryUnit } = await supabase
+    .from("units")
+    .select<"id", { id: string }>("id")
+    .eq("name", DEFAULT_UNIT_NAME)
+    .maybeSingle();
+  if (retryUnit) return { id: retryUnit.id };
+
+  return { error: error.message };
+}
 
 export async function createProductAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const supabase = createSupabaseServerClient();
+
+  const { id: baseUnitId, error: unitError } = await resolveBaseUnitId(
+    supabase,
+    formData.get("baseUnitId"),
+  );
+  if (unitError || !baseUnitId) return { error: unitError ?? "تعذّر تحديد وحدة القياس" };
+
   const parsed = createProductSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") || undefined,
@@ -25,9 +71,9 @@ export async function createProductAction(
     categoryId: formData.get("categoryId") || undefined,
     supplierId: formData.get("supplierId") || undefined,
     visibleInStore: formData.get("visibleInStore") === "on",
-    hasExpiry: formData.get("hasExpiry") === "on",
+    hasExpiry: Boolean(formData.get("expiryDate")),
     expiryDate: formData.get("expiryDate") || undefined,
-    baseUnitId: formData.get("baseUnitId"),
+    baseUnitId,
     quantity: formData.get("quantity") ? Number(formData.get("quantity")) : undefined,
   });
 
@@ -35,15 +81,25 @@ export async function createProductAction(
     return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
   }
 
-  const supabase = createSupabaseServerClient();
-
-  const { url: imageUrl, error: imageError } = await uploadImage(
+  // حقل ملفات متعدد (images) بصفحة المنتجات العامة، أو حقل صورة واحدة (image)
+  // بفورم إضافة منتج المورد — كلاهما مدعوم بنفس الأكشن.
+  const { urls: imageUrls, error: imagesError } = await uploadImages(
     supabase,
     formData,
-    "image",
+    "images",
     "product-images",
   );
-  if (imageError) return { error: imageError };
+  if (imagesError) return { error: imagesError };
+  if (imageUrls.length === 0) {
+    const { url: singleImageUrl, error: imageError } = await uploadImage(
+      supabase,
+      formData,
+      "image",
+      "product-images",
+    );
+    if (imageError) return { error: imageError };
+    if (singleImageUrl) imageUrls.push(singleImageUrl);
+  }
 
   const { data: product, error } = await supabase
     .from("products")
@@ -53,11 +109,12 @@ export async function createProductAction(
       price: parsed.data.price,
       category_id: parsed.data.categoryId ?? null,
       supplier_id: parsed.data.supplierId ?? null,
-      image_url: imageUrl ?? null,
+      image_url: imageUrls[0] ?? null,
+      image_urls: imageUrls,
       visible_in_store: parsed.data.visibleInStore,
       has_expiry: parsed.data.hasExpiry,
       expiry_date: parsed.data.expiryDate ?? null,
-      base_unit_id: parsed.data.baseUnitId,
+      base_unit_id: baseUnitId,
     })
     .select<"id", { id: string }>("id")
     .single();
@@ -82,17 +139,35 @@ export async function updateProductAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const id = formData.get("id");
+  if (typeof id !== "string") return { error: "بيانات غير صالحة" };
+
+  const supabase = createSupabaseServerClient();
+
+  const { data: existingProduct } = await supabase
+    .from("products")
+    .select<"base_unit_id", { base_unit_id: string }>("base_unit_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  const { id: baseUnitId, error: unitError } = await resolveBaseUnitId(
+    supabase,
+    formData.get("baseUnitId"),
+    existingProduct?.base_unit_id,
+  );
+  if (unitError || !baseUnitId) return { error: unitError ?? "تعذّر تحديد وحدة القياس" };
+
   const parsed = updateProductSchema.safeParse({
-    id: formData.get("id"),
+    id,
     name: formData.get("name"),
     description: formData.get("description") || undefined,
     price: Number(formData.get("price")),
     categoryId: formData.get("categoryId") || undefined,
     supplierId: formData.get("supplierId") || undefined,
     visibleInStore: formData.get("visibleInStore") === "on",
-    hasExpiry: formData.get("hasExpiry") === "on",
+    hasExpiry: Boolean(formData.get("expiryDate")),
     expiryDate: formData.get("expiryDate") || undefined,
-    baseUnitId: formData.get("baseUnitId"),
+    baseUnitId,
     quantity: formData.get("quantity") ? Number(formData.get("quantity")) : undefined,
     quantityReason: formData.get("quantityReason") || undefined,
   });
@@ -101,15 +176,23 @@ export async function updateProductAction(
     return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
   }
 
-  const supabase = createSupabaseServerClient();
-
-  const { url: imageUrl, error: imageError } = await uploadImage(
+  const { urls: newImageUrls, error: imagesError } = await uploadImages(
     supabase,
     formData,
-    "image",
+    "images",
     "product-images",
   );
-  if (imageError) return { error: imageError };
+  if (imagesError) return { error: imagesError };
+  if (newImageUrls.length === 0) {
+    const { url: singleImageUrl, error: imageError } = await uploadImage(
+      supabase,
+      formData,
+      "image",
+      "product-images",
+    );
+    if (imageError) return { error: imageError };
+    if (singleImageUrl) newImageUrls.push(singleImageUrl);
+  }
 
   const { error } = await supabase
     .from("products")
@@ -119,11 +202,11 @@ export async function updateProductAction(
       price: parsed.data.price,
       category_id: parsed.data.categoryId ?? null,
       supplier_id: parsed.data.supplierId ?? null,
-      ...(imageUrl ? { image_url: imageUrl } : {}),
+      ...(newImageUrls.length > 0 ? { image_url: newImageUrls[0], image_urls: newImageUrls } : {}),
       visible_in_store: parsed.data.visibleInStore,
       has_expiry: parsed.data.hasExpiry,
       expiry_date: parsed.data.expiryDate ?? null,
-      base_unit_id: parsed.data.baseUnitId,
+      base_unit_id: baseUnitId,
     })
     .eq("id", parsed.data.id);
 
@@ -193,66 +276,6 @@ export async function updateCategoryAction(
     .from("categories")
     .update({ name: parsed.data.name, ...(imageUrl ? { image_url: imageUrl } : {}) })
     .eq("id", parsed.data.id);
-  if (error) return { error: error.message };
-
-  revalidatePath("/products");
-  return { success: true };
-}
-
-export async function createUnitAction(
-  _prevState: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const parsed = createUnitSchema.safeParse({ name: formData.get("name") });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
-
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase.from("units").insert({ name: parsed.data.name });
-  if (error) return { error: error.message };
-
-  revalidatePath("/products");
-  return { success: true };
-}
-
-export async function updateUnitAction(
-  _prevState: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const parsed = updateUnitSchema.safeParse({
-    id: formData.get("id"),
-    name: formData.get("name"),
-  });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
-
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase.from("units").update({ name: parsed.data.name }).eq("id", parsed.data.id);
-  if (error) return { error: error.message };
-
-  revalidatePath("/products");
-  return { success: true };
-}
-
-export async function addProductUnitAction(
-  _prevState: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const productId = formData.get("productId");
-  const unitId = formData.get("unitId");
-  const conversionFactor = Number(formData.get("conversionFactor"));
-  const unitPriceRaw = formData.get("unitPrice");
-
-  if (typeof productId !== "string" || typeof unitId !== "string" || !conversionFactor) {
-    return { error: "بيانات غير صالحة" };
-  }
-
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase.from("product_units").insert({
-    product_id: productId,
-    unit_id: unitId,
-    conversion_factor_to_base: conversionFactor,
-    unit_price: unitPriceRaw ? Number(unitPriceRaw) : null,
-  });
-
   if (error) return { error: error.message };
 
   revalidatePath("/products");
