@@ -1,9 +1,10 @@
 "use client";
 
-import localFont from "next/font/local";
 import { useState, type FormEvent } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { submitStoreLeadAction, type SubmitLeadState } from "../app/actions";
+import { thmanyahSans } from "../lib/thmanyah-font";
+import { BrandLogosSlider } from "./brand-logos-slider";
 
 // يبدأ الحقل بنفس ارتفاع سطر واحد (كحقل "رقمك")، ويتمدد تلقائيًا مع كل
 // سطر جديد بدل أن يكون بارتفاع ثابت لعدة أسطر منذ البداية.
@@ -12,18 +13,6 @@ function autoGrowTextarea(event: FormEvent<HTMLTextAreaElement>) {
   textarea.style.height = "auto";
   textarea.style.height = `${textarea.scrollHeight}px`;
 }
-
-// خط "ثمانية" الخاص بصفحة الهبوط فقط (حملة تسويقية منفصلة عن هوية المتجر
-// العامة التي تستخدم Cairo) — مصدره ملف رفعه المستخدم لجذر المستودع.
-const thmanyahSans = localFont({
-  src: [
-    { path: "../app/fonts/thmanyah/thmanyahsans-Light.woff2", weight: "300", style: "normal" },
-    { path: "../app/fonts/thmanyah/thmanyahsans-Regular.woff2", weight: "400", style: "normal" },
-    { path: "../app/fonts/thmanyah/thmanyahsans-Medium.woff2", weight: "500", style: "normal" },
-    { path: "../app/fonts/thmanyah/thmanyahsans-Bold.woff2", weight: "700", style: "normal" },
-    { path: "../app/fonts/thmanyah/thmanyahsans-Black.woff2", weight: "900", style: "normal" },
-  ],
-});
 
 const initialState: SubmitLeadState = {};
 
@@ -226,33 +215,35 @@ export function LandingHero() {
             </form>
           )}
 
-          {state.success ? null : (
-            <div className="mt-6 text-center lg:mt-8">
-              <p className="text-xs font-bold text-background/40 lg:text-sm">تابعنا</p>
-              <div className="mt-3 flex items-center justify-center gap-4">
-                <a
-                  href="https://www.instagram.com/sbaah.sa?igsi=Zzd2ZHh0ZWxoZmIx&utm_source=qr"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="إنستغرام"
-                  className="text-background/40 transition-colors hover:text-background/70"
-                >
-                  <InstagramIcon className="h-5 w-5" />
-                </a>
-                <a
-                  href="https://www.tiktok.com/@sbaah.sa?_r=1&_t=ZS-99EXjH1nFZt"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="تيك توك"
-                  className="text-background/40 transition-colors hover:text-background/70"
-                >
-                  <TiktokIcon className="h-5 w-5" />
-                </a>
-              </div>
-            </div>
-          )}
+          {state.success ? null : <BrandLogosSlider className="mt-8 lg:mt-10" />}
         </div>
       </div>
+
+      {state.success ? null : (
+        <div className="relative z-10 pb-6 text-center lg:pb-8">
+          <p className="text-xs font-bold text-background/40 lg:text-sm">تابعنا</p>
+          <div className="mt-3 flex items-center justify-center gap-4">
+            <a
+              href="https://www.instagram.com/sbaah.sa?igsi=Zzd2ZHh0ZWxoZmIx&utm_source=qr"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="إنستغرام"
+              className="text-background/40 transition-colors hover:text-background/70"
+            >
+              <InstagramIcon className="h-5 w-5" />
+            </a>
+            <a
+              href="https://www.tiktok.com/@sbaah.sa?_r=1&_t=ZS-99EXjH1nFZt"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="تيك توك"
+              className="text-background/40 transition-colors hover:text-background/70"
+            >
+              <TiktokIcon className="h-5 w-5" />
+            </a>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
