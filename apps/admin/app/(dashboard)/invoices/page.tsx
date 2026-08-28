@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, Card, Input, LinkButton, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
+import { Button, Card, DateRangePicker, LinkButton, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 
@@ -177,8 +177,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
               </option>
             ))}
           </Select>
-          <Input type="date" name="from" defaultValue={searchParams.from ?? ""} className="w-auto" />
-          <Input type="date" name="to" defaultValue={searchParams.to ?? ""} className="w-auto" />
+          <DateRangePicker fromName="from" toName="to" defaultFrom={searchParams.from} defaultTo={searchParams.to} />
           {searchParams.status ? <input type="hidden" name="status" value={searchParams.status} /> : null}
           <Button type="submit" variant="outline">
             فلترة
