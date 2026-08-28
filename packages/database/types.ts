@@ -68,6 +68,7 @@ export type Database = {
           has_expiry: boolean;
           expiry_date: string | null;
           base_unit_id: string;
+          image_urls: string[];
           created_at: string;
           updated_at: string;
         },
@@ -85,6 +86,7 @@ export type Database = {
           has_expiry?: boolean;
           expiry_date?: string | null;
           base_unit_id: string;
+          image_urls?: string[];
         }
       >;
       product_units: Table<

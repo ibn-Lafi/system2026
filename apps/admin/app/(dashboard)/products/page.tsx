@@ -4,15 +4,7 @@ import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
 import { getCurrentUserRole } from "../../../lib/get-current-role";
 import { hasPermission } from "../../../lib/permissions";
-import {
-  createCategoryAction,
-  createProductAction,
-  createUnitAction,
-  toggleProductActiveAction,
-  updateCategoryAction,
-  updateProductAction,
-  updateUnitAction,
-} from "./actions";
+import { createCategoryAction, createProductAction, toggleProductActiveAction, updateCategoryAction, updateProductAction } from "./actions";
 
 type ProductRow = {
   id: string;
@@ -21,16 +13,15 @@ type ProductRow = {
   price: number;
   average_cost: number;
   image_url: string | null;
+  image_urls: string[];
   visible_in_store: boolean;
   is_active: boolean;
   has_expiry: boolean;
   expiry_date: string | null;
   category_id: string | null;
   supplier_id: string | null;
-  base_unit_id: string;
 };
 type CategoryRow = { id: string; name: string; image_url: string | null };
-type UnitRow = { id: string; name: string };
 type StockRow = { product_id: string; quantity_available: number };
 
 export default async function ProductsPage() {
@@ -38,32 +29,29 @@ export default async function ProductsPage() {
   const role = await getCurrentUserRole();
   const canManage = hasPermission(role, "manage_products");
 
-  const [{ data: products }, { data: categories }, { data: units }, { data: stock }] =
-    await Promise.all([
-      // منتجات المورد لا تظهر هنا إطلاقًا — تُدار حصرًا من صفحة المورد نفسها
-      // (راجع suppliers/[id]/page.tsx)، فهي منفصلة تمامًا عن الكتالوج العام.
-      supabase
-        .from("products")
-        .select<
-          "id, name, description, price, average_cost, image_url, visible_in_store, is_active, has_expiry, expiry_date, category_id, supplier_id, base_unit_id",
-          ProductRow
-        >(
-          "id, name, description, price, average_cost, image_url, visible_in_store, is_active, has_expiry, expiry_date, category_id, supplier_id, base_unit_id",
-        )
-        .is("supplier_id", null)
-        .order("name"),
-      supabase
-        .from("categories")
-        .select<"id, name, image_url", CategoryRow>("id, name, image_url")
-        .order("name"),
-      supabase.from("units").select<"id, name", UnitRow>("id, name").order("name"),
-      supabase
-        .from("warehouse_stock")
-        .select<"product_id, quantity_available", StockRow>("product_id, quantity_available"),
-    ]);
+  const [{ data: products }, { data: categories }, { data: stock }] = await Promise.all([
+    // منتجات المورد لا تظهر هنا إطلاقًا — تُدار حصرًا من صفحة المورد نفسها
+    // (راجع suppliers/[id]/page.tsx)، فهي منفصلة تمامًا عن الكتالوج العام.
+    supabase
+      .from("products")
+      .select<
+        "id, name, description, price, average_cost, image_url, image_urls, visible_in_store, is_active, has_expiry, expiry_date, category_id, supplier_id",
+        ProductRow
+      >(
+        "id, name, description, price, average_cost, image_url, image_urls, visible_in_store, is_active, has_expiry, expiry_date, category_id, supplier_id",
+      )
+      .is("supplier_id", null)
+      .order("name"),
+    supabase
+      .from("categories")
+      .select<"id, name, image_url", CategoryRow>("id, name, image_url")
+      .order("name"),
+    supabase
+      .from("warehouse_stock")
+      .select<"product_id, quantity_available", StockRow>("product_id, quantity_available"),
+  ]);
 
   const categoryNameById = new Map((categories ?? []).map((c) => [c.id, c.name]));
-  const unitNameById = new Map((units ?? []).map((u) => [u.id, u.name]));
   const quantityByProductId = new Map((stock ?? []).map((s) => [s.product_id, s.quantity_available]));
 
   return (
@@ -71,7 +59,7 @@ export default async function ProductsPage() {
       <PageHeader
         breadcrumb={<Breadcrumb items={["لوحة التحكم", "المنتجات"]} />}
         title="المنتجات"
-        subtitle="إدارة كتالوج المنتجات والفئات ووحدات القياس"
+        subtitle="إدارة كتالوج المنتجات والفئات"
         actions={
           canManage ? (
             <>
@@ -147,50 +135,6 @@ export default async function ProductsPage() {
                   </div>
                 </div>
               </ModalTrigger>
-              <ModalTrigger label="+ وحدة قياس" title="وحدات القياس" variant="outline" size="lg">
-                <div className="space-y-5">
-                  <ActionForm action={createUnitAction} className="space-y-3">
-                    <div>
-                      <label className="mb-1 block text-sm">اسم الوحدة الجديدة</label>
-                      <Input name="name" placeholder="مثال: كرتون" required />
-                    </div>
-                  </ActionForm>
-
-                  <div className="border-t border-border pt-5">
-                    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-foreground/50">
-                      الوحدات الحالية ({units?.length ?? 0})
-                    </h3>
-                    {(units?.length ?? 0) === 0 ? (
-                      <p className="text-sm text-foreground/60">لا توجد وحدات قياس بعد</p>
-                    ) : (
-                      <div className="max-h-72 space-y-2 overflow-y-auto">
-                        {(units ?? []).map((u) => (
-                          <div
-                            key={u.id}
-                            className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-2.5"
-                          >
-                            <p className="truncate text-sm font-medium">{u.name}</p>
-                            <ModalTrigger
-                              label="تعديل"
-                              title={`تعديل وحدة: ${u.name}`}
-                              variant="outline"
-                              buttonSize="sm"
-                            >
-                              <ActionForm action={updateUnitAction} className="space-y-3">
-                                <input type="hidden" name="id" value={u.id} />
-                                <div>
-                                  <label className="mb-1 block text-sm">الاسم</label>
-                                  <Input name="name" defaultValue={u.name} required />
-                                </div>
-                              </ActionForm>
-                            </ModalTrigger>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </ModalTrigger>
               <ModalTrigger label="+ إضافة منتج" title="إضافة منتج جديد">
                 <ActionForm action={createProductAction} className="space-y-3">
                   <div>
@@ -202,18 +146,16 @@ export default async function ProductsPage() {
                     <Input name="description" />
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm">صورة المنتج</label>
-                    <Input name="image" type="file" accept="image/*" />
+                    <label className="mb-1 block text-sm">
+                      صور المنتج <span className="text-foreground/50">(حتى 5 صور)</span>
+                    </label>
+                    <Input name="images" type="file" accept="image/*" multiple />
                   </div>
                   <div>
                     <label className="mb-1 block text-sm">
                       سعر البيع <span className="text-foreground/50">(شامل ضريبة القيمة المضافة)</span>
                     </label>
                     <Input name="price" type="number" step="0.01" min="0" required />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm">الكمية بالمخزون (اختياري)</label>
-                    <Input name="quantity" type="number" step="1" min="0" placeholder="0" />
                   </div>
                   <div>
                     <label className="mb-1 block text-sm">الفئة</label>
@@ -226,22 +168,8 @@ export default async function ProductsPage() {
                       ))}
                     </Select>
                   </div>
-                  <div>
-                    <label className="mb-1 block text-sm">الوحدة الأساسية</label>
-                    <Select name="baseUnitId" required>
-                      <option value="">اختر وحدة</option>
-                      {(units ?? []).map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" name="visibleInStore" defaultChecked /> ظاهر بالمتجر
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="hasExpiry" /> له تاريخ صلاحية
                   </label>
                   <div>
                     <label className="mb-1 block text-sm">تاريخ الصلاحية (إن وُجد)</label>
@@ -265,7 +193,6 @@ export default async function ProductsPage() {
                 <th>الفئة</th>
                 <th>سعر البيع</th>
                 <th>متوسط التكلفة</th>
-                <th>الوحدة الأساسية</th>
                 <th>الكمية بالمخزون</th>
                 <th>بالمتجر</th>
                 <th>الحالة</th>
@@ -291,7 +218,6 @@ export default async function ProductsPage() {
                   <td>{p.category_id ? categoryNameById.get(p.category_id) : "—"}</td>
                   <td>{formatCurrency(p.price)}</td>
                   <td>{formatCurrency(p.average_cost)}</td>
-                  <td>{unitNameById.get(p.base_unit_id) ?? "—"}</td>
                   <td>{quantityByProductId.get(p.id) ?? 0}</td>
                   <td>{p.visible_in_store ? "نعم" : "لا"}</td>
                   <td>
@@ -320,8 +246,22 @@ export default async function ProductsPage() {
                             <Input name="description" defaultValue={p.description ?? ""} />
                           </div>
                           <div>
-                            <label className="mb-1 block text-sm">صورة المنتج</label>
-                            {p.image_url ? (
+                            <label className="mb-1 block text-sm">
+                              صور المنتج <span className="text-foreground/50">(حتى 5 صور — رفع صور جديدة يستبدل الحالية)</span>
+                            </label>
+                            {p.image_urls.length > 0 ? (
+                              <div className="mb-2 flex flex-wrap gap-2">
+                                {p.image_urls.map((url) => (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    key={url}
+                                    src={url}
+                                    alt={p.name}
+                                    className="h-16 w-16 rounded-lg object-cover"
+                                  />
+                                ))}
+                              </div>
+                            ) : p.image_url ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={p.image_url}
@@ -329,7 +269,7 @@ export default async function ProductsPage() {
                                 className="mb-2 h-16 w-16 rounded-lg object-cover"
                               />
                             ) : null}
-                            <Input name="image" type="file" accept="image/*" />
+                            <Input name="images" type="file" accept="image/*" multiple />
                           </div>
                           <div>
                             <label className="mb-1 block text-sm">
@@ -369,17 +309,6 @@ export default async function ProductsPage() {
                               ))}
                             </Select>
                           </div>
-                          <div>
-                            <label className="mb-1 block text-sm">الوحدة الأساسية</label>
-                            <Select name="baseUnitId" required defaultValue={p.base_unit_id}>
-                              <option value="">اختر وحدة</option>
-                              {(units ?? []).map((u) => (
-                                <option key={u.id} value={u.id}>
-                                  {u.name}
-                                </option>
-                              ))}
-                            </Select>
-                          </div>
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
@@ -387,10 +316,6 @@ export default async function ProductsPage() {
                               defaultChecked={p.visible_in_store}
                             />{" "}
                             ظاهر بالمتجر
-                          </label>
-                          <label className="flex items-center gap-2 text-sm">
-                            <input type="checkbox" name="hasExpiry" defaultChecked={p.has_expiry} /> له
-                            تاريخ صلاحية
                           </label>
                           <div>
                             <label className="mb-1 block text-sm">تاريخ الصلاحية (إن وُجد)</label>
