@@ -168,8 +168,6 @@ export async function updateProductAction(
     hasExpiry: Boolean(formData.get("expiryDate")),
     expiryDate: formData.get("expiryDate") || undefined,
     baseUnitId,
-    quantity: formData.get("quantity") ? Number(formData.get("quantity")) : undefined,
-    quantityReason: formData.get("quantityReason") || undefined,
   });
 
   if (!parsed.success) {
@@ -212,17 +210,7 @@ export async function updateProductAction(
 
   if (error) return { error: error.message };
 
-  if (parsed.data.quantity !== undefined) {
-    const { error: stockError } = await supabase.rpc("set_warehouse_stock_quantity", {
-      p_product_id: parsed.data.id,
-      p_new_quantity: parsed.data.quantity,
-      p_reason: parsed.data.quantityReason ?? "تعديل من صفحة المنتج",
-    });
-    if (stockError) return { error: stockError.message };
-  }
-
   revalidatePath("/products");
-  revalidatePath("/warehouse");
   return { success: true };
 }
 

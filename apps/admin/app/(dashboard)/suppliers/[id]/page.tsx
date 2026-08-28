@@ -289,6 +289,12 @@ export default async function SupplierDetailPage({
                     <Input name="price" type="number" step="0.01" min="0" required />
                   </div>
                   <div>
+                    <label className="mb-1 block text-sm">
+                      الكمية بالمخزون <span className="text-foreground/50">(اختياري — تُسجَّل تلقائيًا بالمخزون)</span>
+                    </label>
+                    <Input name="quantity" type="number" step="1" min="0" placeholder="0" />
+                  </div>
+                  <div>
                     <label className="mb-1 block text-sm">الوحدة الأساسية</label>
                     <Select name="baseUnitId" required>
                       <option value="">اختر وحدة</option>
@@ -301,7 +307,7 @@ export default async function SupplierDetailPage({
                   </div>
                 </ActionForm>
               ) : (
-                <p className="text-sm text-foreground/60">أضف وحدة قياس واحدة على الأقل أولًا من صفحة المنتجات</p>
+                <p className="text-sm text-foreground/60">لا توجد وحدات قياس بعد</p>
               )}
             </ModalTrigger>
           ) : null}
@@ -359,20 +365,6 @@ export default async function SupplierDetailPage({
                               سعر البيع <span className="text-foreground/50">(شامل ضريبة القيمة المضافة)</span>
                             </label>
                             <Input name="price" type="number" step="0.01" min="0" defaultValue={p.price} required />
-                          </div>
-                          <div>
-                            <label className="mb-1 block text-sm">الكمية بالمخزون</label>
-                            <Input
-                              name="quantity"
-                              type="number"
-                              step="1"
-                              min="0"
-                              defaultValue={quantityByProductId.get(p.id) ?? 0}
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-1 block text-sm">سبب تعديل الكمية (إن غيّرتها)</label>
-                            <Input name="quantityReason" placeholder="مثال: جرد دوري" />
                           </div>
                           <div>
                             <label className="mb-1 block text-sm">الفئة</label>
