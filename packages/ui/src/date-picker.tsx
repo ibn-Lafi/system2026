@@ -68,8 +68,8 @@ function formatDisplayDate(date: Date): string {
 }
 
 const TRIGGER_CLASS =
-  "flex h-9 items-center gap-2 whitespace-nowrap rounded-full border border-neutral-800 bg-neutral-950 px-4 text-xs font-medium text-white/90 transition-colors hover:bg-neutral-900";
-const POPOVER_CLASS = "absolute z-20 mt-2 overflow-hidden rounded-2xl border border-neutral-800 shadow-pop";
+  "flex h-9 items-center gap-2 whitespace-nowrap rounded-full border border-neutral-200 bg-white px-4 text-xs font-medium text-black/90 transition-colors hover:bg-neutral-50";
+const POPOVER_CLASS = "absolute z-20 mt-2 overflow-hidden rounded-2xl border border-neutral-200 shadow-pop";
 
 export function DatePicker({
   name,
