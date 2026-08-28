@@ -38,7 +38,7 @@ export function Calendar({ className, classNames, showOutsideDays = true, ...pro
     <DayPicker
       dir="ltr"
       showOutsideDays={showOutsideDays}
-      className={cn("bg-neutral-950 p-4 text-white", className)}
+      className={cn("bg-white p-4 text-black", className)}
       classNames={{
         months: "flex flex-col",
         month: "space-y-3",
@@ -46,23 +46,23 @@ export function Calendar({ className, classNames, showOutsideDays = true, ...pro
         caption_label: "text-base font-bold",
         nav: "absolute inset-x-0 top-0 flex h-8 items-center justify-between",
         button_previous:
-          "flex h-7 w-7 items-center justify-center rounded-md text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-30",
+          "flex h-7 w-7 items-center justify-center rounded-md text-black/60 transition-colors hover:bg-black/5 hover:text-black disabled:pointer-events-none disabled:opacity-30",
         button_next:
-          "flex h-7 w-7 items-center justify-center rounded-md text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-30",
+          "flex h-7 w-7 items-center justify-center rounded-md text-black/60 transition-colors hover:bg-black/5 hover:text-black disabled:pointer-events-none disabled:opacity-30",
         month_grid: "mt-4 w-full border-collapse",
         weekdays: "flex",
-        weekday: "flex h-9 w-10 items-center justify-center text-sm font-normal text-white/40",
+        weekday: "flex h-9 w-10 items-center justify-center text-sm font-normal text-black/40",
         week: "mt-1 flex",
         day: "p-0 text-center text-sm",
         day_button:
-          "mx-auto flex h-10 w-10 items-center justify-center rounded-full text-white/90 transition-colors hover:bg-white/10",
+          "mx-auto flex h-10 w-10 items-center justify-center rounded-full text-black/90 transition-colors hover:bg-black/5",
         today: "[&>button]:font-bold",
-        selected: "[&>button]:bg-white [&>button]:text-black [&>button]:hover:bg-white",
-        range_start: "rounded-s-full bg-white/15 [&>button]:bg-white [&>button]:text-black [&>button]:hover:bg-white",
-        range_end: "rounded-e-full bg-white/15 [&>button]:bg-white [&>button]:text-black [&>button]:hover:bg-white",
-        range_middle: "bg-white/15 [&>button]:rounded-none [&>button]:hover:bg-transparent",
-        outside: "[&>button]:text-white/30",
-        disabled: "[&>button]:pointer-events-none [&>button]:text-white/20",
+        selected: "[&>button]:bg-black [&>button]:text-white [&>button]:hover:bg-black",
+        range_start: "rounded-s-full bg-black/5 [&>button]:bg-black [&>button]:text-white [&>button]:hover:bg-black",
+        range_end: "rounded-e-full bg-black/5 [&>button]:bg-black [&>button]:text-white [&>button]:hover:bg-black",
+        range_middle: "bg-black/5 [&>button]:rounded-none [&>button]:hover:bg-transparent",
+        outside: "[&>button]:text-black/30",
+        disabled: "[&>button]:pointer-events-none [&>button]:text-black/20",
         hidden: "invisible",
         ...classNames,
       }}
