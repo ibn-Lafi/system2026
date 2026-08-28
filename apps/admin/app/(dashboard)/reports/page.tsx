@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Badge, Card, BarList, DateRangePicker, PageHeader, Breadcrumb } from "@system2026/ui";
-import { formatCurrency } from "@system2026/utils";
+import { Badge, Card, BarList, DateRangePicker, MetricCard, RangeChips, PageHeader, Breadcrumb } from "@system2026/ui";
+import { formatCurrency, computeDelta } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { getProfitSummary } from "../../../lib/get-profitability";
 import { getCustomerOutstandingBalances, getSupplierOutstandingBalances } from "../../../lib/get-balances";
@@ -19,6 +19,19 @@ function isoDate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+// نطاق الفترة السابقة بنفس طول الفترة الحالية، للمقارنة (شارة التغيّر على
+// بطاقتي المبيعات والربح) — بلا مقارنة إذا كانت "كل الفترات" (لا يوجد "from"
+// محدد فيُصبح طول الفترة غير معروف).
+function getPreviousPeriodRange(from?: string, to?: string): { from: string; to: string } | null {
+  if (!from) return null;
+  const fromDate = new Date(from);
+  const toDate = to ? new Date(`${to}T23:59:59`) : new Date();
+  const lengthMs = toDate.getTime() - fromDate.getTime();
+  const prevTo = new Date(fromDate.getTime() - 1);
+  const prevFrom = new Date(prevTo.getTime() - lengthMs);
+  return { from: prevFrom.toISOString(), to: prevTo.toISOString() };
+}
+
 export default async function ReportsPage({
   searchParams,
 }: {
@@ -30,27 +43,35 @@ export default async function ReportsPage({
     from: searchParams.from ? searchParams.from : undefined,
     to: searchParams.to ? `${searchParams.to}T23:59:59` : undefined,
   };
+  const previousRange = getPreviousPeriodRange(searchParams.from, searchParams.to);
 
-  const [profitSummary, { data: products }, { data: writeOffs }, { data: settings }, customerDebt, supplierPayables] =
-    await Promise.all([
-      getProfitSummary(range),
-      supabase
-        .from("products")
-        .select<
-          "id, name, average_cost, has_expiry, expiry_date",
-          ProductRow
-        >("id, name, average_cost, has_expiry, expiry_date"),
-      supabase
-        .from("stock_movements")
-        .select<"product_id, quantity_change", WriteOffMovement>("product_id, quantity_change")
-        .eq("movement_type", "write_off"),
-      supabase
-        .from("system_settings")
-        .select<"expiry_alert_days_threshold", SettingsRow>("expiry_alert_days_threshold")
-        .eq("id", 1)
-        .single(),
-      getCustomerOutstandingBalances(),
-      getSupplierOutstandingBalances(),
+  const [
+    profitSummary,
+    previousProfitSummary,
+    { data: products },
+    { data: writeOffs },
+    { data: settings },
+    customerDebt,
+    supplierPayables,
+  ] = await Promise.all([
+    getProfitSummary(range),
+    previousRange ? getProfitSummary(previousRange) : Promise.resolve(null),
+    supabase
+      .from("products")
+      .select<"id, name, average_cost, has_expiry, expiry_date", ProductRow>(
+        "id, name, average_cost, has_expiry, expiry_date",
+      ),
+    supabase
+      .from("stock_movements")
+      .select<"product_id, quantity_change", WriteOffMovement>("product_id, quantity_change")
+      .eq("movement_type", "write_off"),
+    supabase
+      .from("system_settings")
+      .select<"expiry_alert_days_threshold", SettingsRow>("expiry_alert_days_threshold")
+      .eq("id", 1)
+      .single(),
+    getCustomerOutstandingBalances(),
+    getSupplierOutstandingBalances(),
     ]);
 
   const productNameById = new Map((products ?? []).map((p) => [p.id, p.name]));
@@ -87,35 +108,48 @@ export default async function ReportsPage({
   const monthAgo = new Date(today);
   monthAgo.setDate(monthAgo.getDate() - 29);
 
-  const periodLinkClass =
-    "inline-flex h-9 items-center justify-center rounded-full border border-border px-4 text-sm font-medium transition-colors hover:bg-muted";
+  const rangeChipItems = [
+    { label: "كل الفترات", href: "/reports", active: !searchParams.from },
+    { label: "اليوم", href: `/reports?from=${isoDate(today)}`, active: searchParams.from === isoDate(today) },
+    {
+      label: "آخر 7 أيام",
+      href: `/reports?from=${isoDate(weekAgo)}`,
+      active: searchParams.from === isoDate(weekAgo) && !searchParams.to,
+    },
+    {
+      label: "آخر 30 يوم",
+      href: `/reports?from=${isoDate(monthAgo)}`,
+      active: searchParams.from === isoDate(monthAgo) && !searchParams.to,
+    },
+  ];
+
+  const salesDelta = previousProfitSummary
+    ? computeDelta(profitSummary.totalSales, previousProfitSummary.totalSales)
+    : undefined;
+  const profitDelta = previousProfitSummary
+    ? computeDelta(profitSummary.totalProfit, previousProfitSummary.totalProfit)
+    : undefined;
 
   return (
     <div className="space-y-6">
       <PageHeader
         breadcrumb={<Breadcrumb items={["لوحة التحكم", "التقارير"]} />}
         title="التقارير"
-        subtitle="أداء المبيعات والربحية والخسائر"
+        subtitle={
+          previousRange ? "أداء المبيعات والربحية والخسائر — مقارنة بالفترة السابقة بنفس الطول" : "أداء المبيعات والربحية والخسائر"
+        }
       />
 
       <Card>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm text-foreground/60">الفترة:</span>
-          <Link href="/reports" className={periodLinkClass}>
-            كل الفترات
-          </Link>
-          <Link href={`/reports?from=${isoDate(today)}`} className={periodLinkClass}>
-            اليوم
-          </Link>
-          <Link href={`/reports?from=${isoDate(weekAgo)}`} className={periodLinkClass}>
-            آخر 7 أيام
-          </Link>
-          <Link href={`/reports?from=${isoDate(monthAgo)}`} className={periodLinkClass}>
-            آخر 30 يوم
-          </Link>
+          <RangeChips items={rangeChipItems} />
           <form className="flex items-center gap-2 text-sm">
             <DateRangePicker fromName="from" toName="to" defaultFrom={searchParams.from} defaultTo={searchParams.to} />
-            <button type="submit" className={periodLinkClass}>
+            <button
+              type="submit"
+              className="inline-flex h-9 items-center justify-center rounded-full border border-border px-4 text-sm font-medium transition-colors hover:bg-muted"
+            >
               تطبيق
             </button>
           </form>
@@ -123,30 +157,24 @@ export default async function ReportsPage({
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <p className="text-sm text-foreground/60">إجمالي المبيعات</p>
-          <p className="mt-2 text-2xl font-bold">{formatCurrency(profitSummary.totalSales)}</p>
-        </Card>
-        <Card>
-          <p className="text-sm text-foreground/60">إجمالي الربح الصافي</p>
-          <p className="mt-2 text-2xl font-bold">{formatCurrency(profitSummary.totalProfit)}</p>
-        </Card>
+        <MetricCard label="إجمالي المبيعات" value={formatCurrency(profitSummary.totalSales)} delta={salesDelta} />
+        <MetricCard label="إجمالي الربح الصافي" value={formatCurrency(profitSummary.totalProfit)} delta={profitDelta} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Link href="/customers">
-          <Card className="hover:shadow-card-hover">
-            <p className="text-sm text-foreground/60">ديون العملاء المستحقة</p>
-            <p className="mt-2 text-2xl font-bold">{formatCurrency(customerDebt.totalDebt)}</p>
-            <p className="mt-1 text-xs text-primary underline">فتح صفحة العملاء ←</p>
-          </Card>
+          <MetricCard
+            label="ديون العملاء المستحقة"
+            value={formatCurrency(customerDebt.totalDebt)}
+            footer={<span className="text-xs text-primary underline">فتح صفحة العملاء ←</span>}
+          />
         </Link>
         <Link href="/suppliers#dues">
-          <Card className="hover:shadow-card-hover">
-            <p className="text-sm text-foreground/60">مستحقات الموردين</p>
-            <p className="mt-2 text-2xl font-bold">{formatCurrency(supplierPayables.totalDebt)}</p>
-            <p className="mt-1 text-xs text-primary underline">فتح صفحة الموردين ←</p>
-          </Card>
+          <MetricCard
+            label="مستحقات الموردين"
+            value={formatCurrency(supplierPayables.totalDebt)}
+            footer={<span className="text-xs text-primary underline">فتح صفحة الموردين ←</span>}
+          />
         </Link>
       </div>
 

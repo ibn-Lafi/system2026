@@ -1,9 +1,13 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, Button, BarList, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Card, Button, BarList, MetricCard, LineChart, PageHeader, Breadcrumb } from "@system2026/ui";
+import { computeDelta } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
 import { hasPermission } from "../../../../lib/permissions";
+
+const TREND_DAYS = 14;
+const WEEKDAY_LABELS = ["أحد", "إثن", "ثلا", "أرب", "خمس", "جمعة", "سبت"];
 
 type LeadRow = { id: string; phone_number: string; desired_store: string; created_at: string };
 type WishStat = { key: string; display: string; count: number };
@@ -53,6 +57,34 @@ export default async function StoreLeadsPage() {
   );
   const topWishes = wishStats.slice(0, 10);
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const trendStart = new Date(todayStart);
+  trendStart.setDate(trendStart.getDate() - (TREND_DAYS - 1));
+  const last7Start = new Date(todayStart);
+  last7Start.setDate(last7Start.getDate() - 6);
+  const previous7Start = new Date(last7Start);
+  previous7Start.setDate(previous7Start.getDate() - 7);
+
+  const leadsByDay = new Map<string, number>();
+  for (const lead of leads) {
+    const key = lead.created_at.slice(0, 10);
+    leadsByDay.set(key, (leadsByDay.get(key) ?? 0) + 1);
+  }
+  const trendDays = Array.from({ length: TREND_DAYS }, (_, i) => {
+    const d = new Date(trendStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+  const trendLabels = trendDays.map((d) => WEEKDAY_LABELS[d.getDay()]!);
+  const trendValues = trendDays.map((d) => leadsByDay.get(d.toISOString().slice(0, 10)) ?? 0);
+
+  const last7Count = leads.filter((l) => new Date(l.created_at) >= last7Start).length;
+  const previous7Count = leads.filter((l) => {
+    const d = new Date(l.created_at);
+    return d >= previous7Start && d < last7Start;
+  }).length;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -72,6 +104,21 @@ export default async function StoreLeadsPage() {
         </Card>
       ) : (
         <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MetricCard
+              label="إجمالي الطلبات المستلمة"
+              value={leads.length.toString()}
+              delta={computeDelta(last7Count, previous7Count)}
+              sparkline={trendValues.slice(-7)}
+            />
+            <MetricCard label="عدد الأمنيات الفريدة" value={wishStats.length.toString()} />
+          </div>
+
+          <Card>
+            <h2 className="mb-1 text-sm font-semibold">الطلبات اليومية آخر {TREND_DAYS} يومًا</h2>
+            <LineChart series={[{ label: "الطلبات", color: "hsl(var(--primary))", values: trendValues }]} xLabels={trendLabels} />
+          </Card>
+
           <Card>
             <h2 className="mb-4 font-semibold">أكثر الأمنيات تكرارًا</h2>
             <BarList
