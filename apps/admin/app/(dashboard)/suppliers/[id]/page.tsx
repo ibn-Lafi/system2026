@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card, DatePicker, Input, MetricCard, ModalTrigger, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
+import { Card, DatePicker, Input, ModalTrigger, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
@@ -259,13 +259,13 @@ export default async function SupplierDetailPage({
           </div>
         </Card>
 
-        <MetricCard
-          label="المستحق للمورد"
-          value={formatCurrency(totalOwed)}
-          footer={
-            <span className="text-sm text-foreground/60">مجموع فواتير الشراء غير المدفوعة/الجزئية بعد خصم الدفعات المسددة</span>
-          }
-        />
+        <Card>
+          <h2 className="mb-2 font-semibold">المستحق للمورد</h2>
+          <p className="text-3xl font-bold">{formatCurrency(totalOwed)}</p>
+          <p className="mt-1 text-sm text-foreground/60">
+            مجموع فواتير الشراء غير المدفوعة/الجزئية بعد خصم الدفعات المسددة
+          </p>
+        </Card>
       </div>
 
       <Card>

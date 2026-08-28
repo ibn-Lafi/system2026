@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, Card, Input, MetricCard, ModalTrigger, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
+import { Button, Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
@@ -108,10 +108,6 @@ export default async function SuppliersPage({
     return `/suppliers?${params.toString()}#dues`;
   }
 
-  const totalPurchased = filteredInvoices.reduce((sum, inv) => sum + inv.total_amount, 0);
-  const totalDue = duesRows.reduce((sum, row) => sum + row.remaining, 0);
-  const totalPaid = totalPurchased - totalDue;
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -151,20 +147,6 @@ export default async function SuppliersPage({
           ) : null
         }
       />
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <MetricCard label="إجمالي المشتريات" value={formatCurrency(totalPurchased)} />
-        <MetricCard label="المسدد" value={formatCurrency(totalPaid)} />
-        <MetricCard
-          label="إجمالي المستحقات"
-          value={formatCurrency(totalDue)}
-          footer={
-            <a href="#dues" className="text-xs text-primary underline">
-              عرض تفاصيل المستحقات ↓
-            </a>
-          }
-        />
-      </div>
 
       <Card>
         <div className="overflow-x-auto">

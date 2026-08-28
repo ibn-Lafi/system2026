@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Button, Card, Input, LinkButton, MetricCard, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
-import { formatCurrency } from "@system2026/utils";
+import { Button, Card, Input, LinkButton, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
 import { getCurrentUserRole } from "../../../lib/get-current-role";
@@ -88,14 +87,6 @@ export default async function CustomersPage({
     invoicesByCustomer[inv.customer_id] ??= [];
     invoicesByCustomer[inv.customer_id]!.push({ id: inv.id, invoice_number: inv.invoice_number, remaining });
   }
-
-  // المؤشرات تعكس فلتر المدينة الحالي بالصفحة — نفس نطاق الجدول أدناه فقط.
-  const visibleCustomers = customers ?? [];
-  const showInStoreCount = visibleCustomers.filter((c) => c.show_in_store).length;
-  const totalDebtInView = visibleCustomers.reduce((sum, c) => {
-    const remaining = (invoicesByCustomer[c.id] ?? []).reduce((s, inv) => s + inv.remaining, 0);
-    return sum + remaining;
-  }, 0);
 
   return (
     <div className="space-y-6">
@@ -209,12 +200,6 @@ export default async function CustomersPage({
           </>
         }
       />
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <MetricCard label="عدد العملاء" value={visibleCustomers.length.toString()} />
-        <MetricCard label="ظاهرون بالمتجر العام" value={showInStoreCount.toString()} />
-        <MetricCard label="إجمالي الديون المستحقة" value={formatCurrency(totalDebtInView)} />
-      </div>
 
       <Card>
         <form className="mb-4 flex flex-wrap items-end gap-3 text-sm">

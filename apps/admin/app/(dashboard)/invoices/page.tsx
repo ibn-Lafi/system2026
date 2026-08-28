@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, Card, DateRangePicker, LinkButton, MetricCard, RangeChips, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Button, Card, DateRangePicker, LinkButton, RangeChips, PageHeader, Breadcrumb, Select } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 
@@ -73,44 +73,16 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
   if (searchParams.from) query = query.gte("invoice_date", searchParams.from);
   if (searchParams.to) query = query.lte("invoice_date", `${searchParams.to}T23:59:59`);
 
-  // استعلام مؤشرات منفصل بلا limit(100) الخاص بجدول العرض — لضمان أن
-  // البطاقات (العدد/الإجمالي) تعكس كل الفواتير المطابقة للفلاتر فعليًا، وليس
-  // فقط أول 100 صف معروض بالجدول.
-  let statsQuery = supabase.from("invoices").select<"total_amount, status", { total_amount: number; status: string }>(
-    "total_amount, status",
-  );
-  if (searchParams.customerId) statsQuery = statsQuery.eq("customer_id", searchParams.customerId);
-  if (searchParams.status) {
-    statsQuery = statsQuery.eq("status", searchParams.status as "paid" | "partial" | "unpaid" | "cancelled");
-  }
-  if (searchParams.paymentMethod) {
-    statsQuery = statsQuery.eq(
-      "payment_method",
-      searchParams.paymentMethod as "cash" | "credit" | "check" | "transfer",
-    );
-  }
-  if (searchParams.from) statsQuery = statsQuery.gte("invoice_date", searchParams.from);
-  if (searchParams.to) statsQuery = statsQuery.lte("invoice_date", `${searchParams.to}T23:59:59`);
-
-  const [{ data: invoices }, { data: customers }, { data: statsInvoices }] = await Promise.all([
+  const [{ data: invoices }, { data: customers }] = await Promise.all([
     query,
     supabase
       .from("customers")
       .select<"id, name, shop_name", { id: string; name: string; shop_name: string | null }>(
         "id, name, shop_name",
       ),
-    statsQuery,
   ]);
 
   const customerNameById = new Map((customers ?? []).map((c) => [c.id, c.shop_name ?? c.name]));
-
-  const matchingCount = statsInvoices?.length ?? 0;
-  const nonCancelled = (statsInvoices ?? []).filter((inv) => inv.status !== "cancelled");
-  const salesTotal = nonCancelled.reduce((sum, inv) => sum + inv.total_amount, 0);
-  const averageInvoice = nonCancelled.length > 0 ? salesTotal / nonCancelled.length : 0;
-  const unpaidOrPartialCount = (statsInvoices ?? []).filter(
-    (inv) => inv.status === "unpaid" || inv.status === "partial",
-  ).length;
 
   const now = new Date();
   const last7Days = new Date(now);
@@ -141,13 +113,6 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
         subtitle="كل فواتير البيع — تسجيل المرتجعات والتحصيلات متاح الآن من صفحة العملاء"
         actions={<LinkButton href="/invoice-requests">طلبات تعديل الفواتير</LinkButton>}
       />
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="عدد الفواتير" value={matchingCount.toString()} />
-        <MetricCard label="إجمالي المبيعات" value={formatCurrency(salesTotal)} />
-        <MetricCard label="متوسط الفاتورة" value={formatCurrency(averageInvoice)} />
-        <MetricCard label="غير مسددة/جزئي" value={unpaidOrPartialCount.toString()} />
-      </div>
 
       <Card>
         <div className="mb-4">

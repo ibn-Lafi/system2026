@@ -1,5 +1,16 @@
 import Link from "next/link";
-import { Badge, Card, BarList, DateRangePicker, MetricCard, RangeChips, PageHeader, Breadcrumb } from "@system2026/ui";
+import {
+  Badge,
+  Card,
+  HorizontalBarChart,
+  StackedBarChart,
+  CHART_CATEGORICAL_COLORS,
+  DateRangePicker,
+  MetricCard,
+  RangeChips,
+  PageHeader,
+  Breadcrumb,
+} from "@system2026/ui";
 import { formatCurrency, computeDelta } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { getProfitSummary } from "../../../lib/get-profitability";
@@ -8,6 +19,21 @@ import { getCustomerOutstandingBalances, getSupplierOutstandingBalances } from "
 type ProductRow = { id: string; name: string; average_cost: number; has_expiry: boolean; expiry_date: string | null };
 type WriteOffMovement = { product_id: string; quantity_change: number };
 type SettingsRow = { expiry_alert_days_threshold: number };
+type RangeInvoiceRow = { status: string; payment_method: string };
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cash: "نقدًا",
+  credit: "آجل",
+  check: "شيك",
+  transfer: "تحويل",
+};
+
+const INVOICE_STATUS_LABELS: Record<string, string> = {
+  paid: "مدفوعة",
+  partial: "جزئي",
+  unpaid: "غير مدفوعة",
+  cancelled: "ملغاة",
+};
 
 function startOfToday() {
   const d = new Date();
@@ -45,6 +71,12 @@ export default async function ReportsPage({
   };
   const previousRange = getPreviousPeriodRange(searchParams.from, searchParams.to);
 
+  let rangeInvoicesQuery = supabase.from("invoices").select<"status, payment_method", RangeInvoiceRow>(
+    "status, payment_method",
+  );
+  if (range.from) rangeInvoicesQuery = rangeInvoicesQuery.gte("invoice_date", range.from);
+  if (range.to) rangeInvoicesQuery = rangeInvoicesQuery.lte("invoice_date", range.to);
+
   const [
     profitSummary,
     previousProfitSummary,
@@ -53,6 +85,7 @@ export default async function ReportsPage({
     { data: settings },
     customerDebt,
     supplierPayables,
+    { data: rangeInvoices },
   ] = await Promise.all([
     getProfitSummary(range),
     previousRange ? getProfitSummary(previousRange) : Promise.resolve(null),
@@ -72,7 +105,26 @@ export default async function ReportsPage({
       .single(),
     getCustomerOutstandingBalances(),
     getSupplierOutstandingBalances(),
+    rangeInvoicesQuery,
     ]);
+
+  const paymentMethodCounts = new Map<string, number>();
+  const statusCounts = new Map<string, number>();
+  for (const inv of rangeInvoices ?? []) {
+    paymentMethodCounts.set(inv.payment_method, (paymentMethodCounts.get(inv.payment_method) ?? 0) + 1);
+    statusCounts.set(inv.status, (statusCounts.get(inv.status) ?? 0) + 1);
+  }
+  const paymentMethodSegments = Object.keys(PAYMENT_METHOD_LABELS).map((key, i) => ({
+    label: PAYMENT_METHOD_LABELS[key]!,
+    value: paymentMethodCounts.get(key) ?? 0,
+    color: CHART_CATEGORICAL_COLORS[i % CHART_CATEGORICAL_COLORS.length]!,
+  }));
+  const statusSegments = Object.keys(INVOICE_STATUS_LABELS).map((key, i) => ({
+    label: INVOICE_STATUS_LABELS[key]!,
+    value: statusCounts.get(key) ?? 0,
+    color: CHART_CATEGORICAL_COLORS[i % CHART_CATEGORICAL_COLORS.length]!,
+  }));
+  const hasRangeInvoices = (rangeInvoices?.length ?? 0) > 0;
 
   const productNameById = new Map((products ?? []).map((p) => [p.id, p.name]));
   const productCostById = new Map((products ?? []).map((p) => [p.id, p.average_cost]));
@@ -181,7 +233,7 @@ export default async function ReportsPage({
       <Card>
         <h2 className="mb-4 font-semibold">أفضل المنتجات مبيعًا (بالكمية)</h2>
         {topProductsByQuantity.length > 0 ? (
-          <BarList
+          <HorizontalBarChart
             items={topProductsByQuantity.map(([productId, stats]) => ({
               label: productNameById.get(productId) ?? "—",
               value: stats.quantity,
@@ -196,7 +248,7 @@ export default async function ReportsPage({
       <Card>
         <h2 className="mb-4 font-semibold">أفضل المنتجات ربحًا</h2>
         {topProductsByProfit.length > 0 ? (
-          <BarList
+          <HorizontalBarChart
             items={topProductsByProfit.map(([productId, stats]) => ({
               label: productNameById.get(productId) ?? "—",
               value: stats.profit,
@@ -205,6 +257,25 @@ export default async function ReportsPage({
           />
         ) : null}
       </Card>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card>
+          <h2 className="mb-4 font-semibold">توزيع الفواتير حسب طريقة الدفع</h2>
+          {hasRangeInvoices ? (
+            <StackedBarChart segments={paymentMethodSegments} />
+          ) : (
+            <p className="text-sm text-foreground/60">لا توجد فواتير لهذه الفترة</p>
+          )}
+        </Card>
+        <Card>
+          <h2 className="mb-4 font-semibold">توزيع الفواتير حسب الحالة</h2>
+          {hasRangeInvoices ? (
+            <StackedBarChart segments={statusSegments} />
+          ) : (
+            <p className="text-sm text-foreground/60">لا توجد فواتير لهذه الفترة</p>
+          )}
+        </Card>
+      </div>
 
       <Card>
         <h2 className="mb-3 font-semibold">تفاصيل أفضل المنتجات ربحًا</h2>
@@ -243,7 +314,7 @@ export default async function ReportsPage({
         </p>
         {lossByProduct.size > 0 ? (
           <div className="mb-5">
-            <BarList
+            <HorizontalBarChart
               items={Array.from(lossByProduct.entries())
                 .sort((a, b) => b[1] - a[1])
                 .map(([productId, value]) => ({

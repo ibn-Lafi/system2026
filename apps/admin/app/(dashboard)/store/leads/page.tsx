@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, Button, BarList, MetricCard, LineChart, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Card, Button, HorizontalBarChart, MetricCard, LineChart, PageHeader, Breadcrumb } from "@system2026/ui";
 import { computeDelta } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -121,7 +121,7 @@ export default async function StoreLeadsPage() {
 
           <Card>
             <h2 className="mb-4 font-semibold">أكثر الأمنيات تكرارًا</h2>
-            <BarList
+            <HorizontalBarChart
               items={topWishes.map((w) => ({
                 label: w.display,
                 value: w.count,

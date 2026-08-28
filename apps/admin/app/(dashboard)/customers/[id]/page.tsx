@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Badge, Card, Input, LinkButton, MetricCard, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Badge, Card, Input, LinkButton, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
@@ -233,13 +233,13 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
           </div>
         </Card>
 
-        <MetricCard
-          label="الرصيد المستحق"
-          value={formatCurrency(totalDebt)}
-          footer={
-            <span className="text-sm text-foreground/60">مجموع الفواتير غير المدفوعة/الجزئية بعد خصم الدفعات المسجّلة</span>
-          }
-        />
+        <Card>
+          <h2 className="mb-2 font-semibold">الرصيد المستحق</h2>
+          <p className="text-3xl font-bold">{formatCurrency(totalDebt)}</p>
+          <p className="mt-1 text-sm text-foreground/60">
+            مجموع الفواتير غير المدفوعة/الجزئية بعد خصم الدفعات المسجّلة
+          </p>
+        </Card>
       </div>
 
       <Card>
