@@ -12,5 +12,8 @@ export * from "./bar-list";
 export * from "./bar-chart";
 export * from "./calendar";
 export * from "./date-picker";
+export * from "./metric-card";
+export * from "./range-chips";
+export * from "./line-chart";
 export * from "./document-header";
 export * from "./invoice-print";
