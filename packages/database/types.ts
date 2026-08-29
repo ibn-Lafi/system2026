@@ -245,6 +245,7 @@ export type Database = {
           vat_number: string | null;
           show_in_store: boolean;
           city_id: string | null;
+          loyalty_points: number;
           created_at: string;
           updated_at: string;
         },
@@ -292,6 +293,38 @@ export type Database = {
           show_in_store?: boolean;
         }
       >;
+      loyalty_point_movements: Table<
+        {
+          id: string;
+          customer_id: string;
+          points_change: number;
+          balance_after: number;
+          reason: string;
+          performed_by: string | null;
+          created_at: string;
+        },
+        never // لا INSERT مباشر — عبر add_loyalty_points() فقط
+      >;
+      customer_complaints: Table<
+        {
+          id: string;
+          customer_id: string;
+          branch_id: string | null;
+          description: string;
+          status: Database["public"]["Enums"]["customer_complaint_status"];
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        },
+        {
+          id?: string;
+          customer_id: string;
+          branch_id?: string | null;
+          description: string;
+          status?: Database["public"]["Enums"]["customer_complaint_status"];
+          created_by?: string | null;
+        }
+      >;
       invoices: Table<
         {
           id: string;
@@ -307,6 +340,7 @@ export type Database = {
           discount_percentage: number;
           branch_id: string | null;
           notes: string | null;
+          sale_channel: Database["public"]["Enums"]["invoice_sale_channel"];
           created_at: string;
           updated_at: string;
         },
@@ -567,6 +601,10 @@ export type Database = {
         Args: { p_product_id: string; p_new_quantity: number; p_reason?: string | null };
         Returns: number;
       };
+      add_loyalty_points: {
+        Args: { p_customer_id: string; p_points: number; p_reason: string };
+        Returns: number;
+      };
       set_purchase_invoice_attachment: {
         Args: { p_purchase_invoice_id: string; p_attachment_path: string };
         Returns: undefined;
@@ -624,6 +662,8 @@ export type Database = {
       return_condition: "resalable" | "damaged" | "expired";
       edit_request_status: "pending" | "approved" | "rejected";
       audit_action: "insert" | "update" | "delete";
+      invoice_sale_channel: "cashier" | "online_store";
+      customer_complaint_status: "open" | "in_progress" | "resolved";
     };
   };
 };

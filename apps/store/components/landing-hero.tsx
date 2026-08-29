@@ -120,26 +120,20 @@ export function LandingHero() {
         <div className="mx-auto w-full max-w-md">
           <div className="-mt-10 mb-10 flex justify-center lg:-mt-6 lg:mb-14">
             <div className="inline-flex cursor-pointer flex-col items-center transition-transform hover:scale-105 active:scale-95">
-              <div className="flex items-center gap-3 lg:gap-4">
-                <span
-                  style={{
-                    ...thmanyahSans.style,
-                    textShadow: "2px 3px 0 #00504f, 0 10px 22px rgba(0,0,0,0.35)",
-                  }}
-                  className="text-[42px] font-black leading-none lg:text-[64px]"
-                >
-                  سبعة
-                </span>
-                <span
-                  style={thmanyahSans.style}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F5C860] text-xl font-black leading-none text-[#00504f] shadow-[0_4px_16px_rgba(0,0,0,0.35)] lg:h-[52px] lg:w-[52px] lg:text-3xl"
-                >
-                  7
-                </span>
+              <div
+                style={{
+                  ...thmanyahSans.style,
+                  textShadow: "2px 3px 0 #00504f, 0 10px 22px rgba(0,0,0,0.35)",
+                }}
+                className="flex items-baseline gap-2 whitespace-nowrap font-black leading-none lg:gap-3"
+              >
+                <span className="text-[56px] lg:text-[84px]">سـبـعـة</span>
+                <span className="text-[56px] lg:text-[84px]">7</span>
               </div>
               <span
                 dir="ltr"
-                className="mt-2 text-[10px] font-bold uppercase tracking-[0.4em] text-background/45 lg:mt-2.5 lg:text-xs"
+                style={thmanyahSans.style}
+                className="mt-1 text-[24px] font-black uppercase tracking-[0.15em] text-background/75 lg:mt-1.5 lg:text-[36px]"
               >
                 SBAAH
               </span>

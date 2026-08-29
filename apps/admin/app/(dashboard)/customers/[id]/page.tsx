@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   Badge,
+  Button,
   Card,
   Input,
   LinkButton,
@@ -17,7 +18,13 @@ import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
 import { hasPermission } from "../../../../lib/permissions";
-import { createBranchAction, updateBranchAction } from "../actions";
+import {
+  createBranchAction,
+  updateBranchAction,
+  addLoyaltyPointsAction,
+  createComplaintAction,
+  updateComplaintStatusAction,
+} from "../actions";
 
 type CustomerDetail = {
   id: string;
@@ -31,6 +38,7 @@ type CustomerDetail = {
   vat_number: string | null;
   show_in_store: boolean;
   city_id: string | null;
+  loyalty_points: number;
 };
 
 type BranchRow = {
@@ -105,6 +113,8 @@ type InvoiceRow = {
   invoice_date: string;
   total_amount: number;
   status: string;
+  branch_id: string | null;
+  sale_channel: string;
 };
 
 type PaymentRow = {
@@ -113,6 +123,22 @@ type PaymentRow = {
   amount: number;
   method: string;
   invoice_id: string | null;
+};
+
+type LoyaltyMovementRow = {
+  id: string;
+  points_change: number;
+  balance_after: number;
+  reason: string;
+  created_at: string;
+};
+
+type ComplaintRow = {
+  id: string;
+  branch_id: string | null;
+  description: string;
+  status: string;
+  created_at: string;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -126,6 +152,23 @@ const METHOD_LABELS: Record<string, string> = {
   cash: "نقدًا",
   check: "شيك",
   transfer: "تحويل بنكي",
+};
+
+const SALE_CHANNEL_LABELS: Record<string, string> = {
+  cashier: "كاشير",
+  online_store: "المتجر الإلكتروني",
+};
+
+const COMPLAINT_STATUS_LABELS: Record<string, string> = {
+  open: "مفتوحة",
+  in_progress: "قيد المعالجة",
+  resolved: "محلولة",
+};
+
+const COMPLAINT_STATUS_BADGE: Record<string, "danger" | "warning" | "success"> = {
+  open: "danger",
+  in_progress: "warning",
+  resolved: "success",
 };
 
 function toDateInput(date: Date) {
@@ -160,21 +203,28 @@ export default async function CustomerDetailPage({
   const { data: customer } = await supabase
     .from("customers")
     .select<
-      "id, name, shop_name, phone, address, notes, google_maps_link, commercial_registration_number, vat_number, show_in_store, city_id",
+      "id, name, shop_name, phone, address, notes, google_maps_link, commercial_registration_number, vat_number, show_in_store, city_id, loyalty_points",
       CustomerDetail
     >(
-      "id, name, shop_name, phone, address, notes, google_maps_link, commercial_registration_number, vat_number, show_in_store, city_id",
+      "id, name, shop_name, phone, address, notes, google_maps_link, commercial_registration_number, vat_number, show_in_store, city_id, loyalty_points",
     )
     .eq("id", params.id)
     .single();
 
   if (!customer) notFound();
 
-  const [{ data: allInvoices }, { data: allPayments }, { data: branches }, { data: cities }] = await Promise.all([
+  const [
+    { data: allInvoices },
+    { data: allPayments },
+    { data: branches },
+    { data: cities },
+    { data: loyaltyMovements },
+    { data: complaints },
+  ] = await Promise.all([
     supabase
       .from("invoices")
-      .select<"id, invoice_number, invoice_date, total_amount, status", InvoiceRow>(
-        "id, invoice_number, invoice_date, total_amount, status",
+      .select<"id, invoice_number, invoice_date, total_amount, status, branch_id, sale_channel", InvoiceRow>(
+        "id, invoice_number, invoice_date, total_amount, status, branch_id, sale_channel",
       )
       .eq("customer_id", customer.id)
       .order("invoice_number", { ascending: false }),
@@ -194,9 +244,40 @@ export default async function CustomerDetailPage({
       .eq("customer_id", customer.id)
       .order("name"),
     supabase.from("cities").select<"id, name", City>("id, name").order("name"),
+    supabase
+      .from("loyalty_point_movements")
+      .select<"id, points_change, balance_after, reason, created_at", LoyaltyMovementRow>(
+        "id, points_change, balance_after, reason, created_at",
+      )
+      .eq("customer_id", customer.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("customer_complaints")
+      .select<"id, branch_id, description, status, created_at", ComplaintRow>(
+        "id, branch_id, description, status, created_at",
+      )
+      .eq("customer_id", customer.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const cityNameById = new Map((cities ?? []).map((c) => [c.id, c.name]));
+  const branchNameById = new Map((branches ?? []).map((b) => [b.id, b.name]));
+
+  // أكثر فرع يشتري منه العميل — إحصائية تراكمية (كل الفواتير)، بلا فلترة بفترة.
+  const branchPurchaseCounts = new Map<string, number>();
+  for (const inv of allInvoices ?? []) {
+    if (!inv.branch_id) continue;
+    branchPurchaseCounts.set(inv.branch_id, (branchPurchaseCounts.get(inv.branch_id) ?? 0) + 1);
+  }
+  let topBranchName: string | null = null;
+  let topBranchCount = 0;
+  for (const [branchId, count] of branchPurchaseCounts) {
+    if (count > topBranchCount) {
+      topBranchCount = count;
+      topBranchName = branchNameById.get(branchId) ?? null;
+    }
+  }
 
   // الرصيد المستحق يبقى محسوبًا من كل الفواتير والدفعات دائمًا (بلا فلترة
   // بفترة) — التقرير المفصّل أدناه فقط (الجدولان + المؤشرات) هو ما يُفلتَر
@@ -291,6 +372,10 @@ export default async function CustomerDetailPage({
               <Badge variant={customer.show_in_store ? "success" : "muted"}>
                 {customer.show_in_store ? "نعم" : "لا"}
               </Badge>
+            </p>
+            <p>
+              <span className="text-foreground/60">أكثر فرع يشتري منه: </span>
+              {topBranchName ? `${topBranchName} (${topBranchCount} فاتورة)` : "—"}
             </p>
             {customer.google_maps_link ? (
               <LinkButton
@@ -403,6 +488,7 @@ export default async function CustomerDetailPage({
               <tr className="border-b border-border text-right text-foreground/60">
                 <th className="py-2">رقم الفاتورة</th>
                 <th>التاريخ</th>
+                <th>القناة</th>
                 <th>الإجمالي</th>
                 <th>المتبقي</th>
                 <th>الحالة</th>
@@ -414,6 +500,7 @@ export default async function CustomerDetailPage({
                 <tr key={inv.id} className="border-b border-border/50">
                   <td className="py-2">#{inv.invoice_number}</td>
                   <td>{new Date(inv.invoice_date).toLocaleDateString("ar-SA")}</td>
+                  <td>{SALE_CHANNEL_LABELS[inv.sale_channel] ?? inv.sale_channel}</td>
                   <td>{formatCurrency(inv.total_amount)}</td>
                   <td>
                     {inv.status === "unpaid" || inv.status === "partial"
@@ -457,6 +544,130 @@ export default async function CustomerDetailPage({
           </table>
         </div>
         {payments.length === 0 ? <p className="py-4 text-foreground/60">لا توجد دفعات بهذه الفترة</p> : null}
+      </Card>
+
+      <Card>
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold">نقاط الولاء</h2>
+            <p className="text-sm text-foreground/60">
+              إضافة يدوية حاليًا — احتساب النقاط تلقائيًا من الكاشير/المتجر الإلكتروني مرحلة قادمة
+            </p>
+          </div>
+          {canManage ? (
+            <ModalTrigger label="+ إضافة نقاط" title="إضافة نقاط ولاء" variant="outline">
+              <ActionForm action={addLoyaltyPointsAction} className="space-y-3">
+                <input type="hidden" name="customerId" value={customer.id} />
+                <div>
+                  <label className="mb-1 block text-sm">عدد النقاط</label>
+                  <Input name="points" type="number" step="1" min="1" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">السبب</label>
+                  <Input name="reason" placeholder="مثال: هدية عيد ميلاد المحل" required />
+                </div>
+              </ActionForm>
+            </ModalTrigger>
+          ) : null}
+        </div>
+        <p className="mb-4 text-3xl font-bold">{customer.loyalty_points.toLocaleString("ar-SA")} نقطة</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-right text-foreground/60">
+                <th className="py-2">التاريخ</th>
+                <th>التغيير</th>
+                <th>الرصيد بعدها</th>
+                <th>السبب</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(loyaltyMovements ?? []).map((m) => (
+                <tr key={m.id} className="border-b border-border/50">
+                  <td className="py-2">{new Date(m.created_at).toLocaleDateString("ar-SA")}</td>
+                  <td className="text-primary">+{m.points_change}</td>
+                  <td>{m.balance_after}</td>
+                  <td>{m.reason}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {(loyaltyMovements?.length ?? 0) === 0 ? (
+          <p className="py-4 text-foreground/60">لا توجد حركات نقاط بعد</p>
+        ) : null}
+      </Card>
+
+      <Card>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-semibold">شكاوى العميل</h2>
+          {canManage ? (
+            <ModalTrigger label="+ تسجيل شكوى" title="تسجيل شكوى جديدة" variant="outline">
+              <ActionForm action={createComplaintAction} className="space-y-3">
+                <input type="hidden" name="customerId" value={customer.id} />
+                <div>
+                  <label className="mb-1 block text-sm">الفرع المسبب للشكوى (اختياري)</label>
+                  <Select name="branchId" defaultValue="">
+                    <option value="">بدون فرع محدد</option>
+                    {(branches ?? []).map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">نص الشكوى</label>
+                  <Input name="description" required />
+                </div>
+              </ActionForm>
+            </ModalTrigger>
+          ) : null}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-right text-foreground/60">
+                <th className="py-2">التاريخ</th>
+                <th>الفرع</th>
+                <th>الشكوى</th>
+                <th>الحالة</th>
+                {canManage ? <th></th> : null}
+              </tr>
+            </thead>
+            <tbody>
+              {(complaints ?? []).map((c) => (
+                <tr key={c.id} className="border-b border-border/50">
+                  <td className="py-2">{new Date(c.created_at).toLocaleDateString("ar-SA")}</td>
+                  <td>{c.branch_id ? branchNameById.get(c.branch_id) ?? "—" : "—"}</td>
+                  <td>{c.description}</td>
+                  <td>
+                    <Badge variant={COMPLAINT_STATUS_BADGE[c.status] ?? "muted"}>
+                      {COMPLAINT_STATUS_LABELS[c.status] ?? c.status}
+                    </Badge>
+                  </td>
+                  {canManage ? (
+                    <td className="py-2">
+                      <form action={updateComplaintStatusAction} className="flex items-center gap-2">
+                        <input type="hidden" name="id" value={c.id} />
+                        <input type="hidden" name="customerId" value={customer.id} />
+                        <Select name="status" defaultValue={c.status} className="w-auto">
+                          <option value="open">مفتوحة</option>
+                          <option value="in_progress">قيد المعالجة</option>
+                          <option value="resolved">محلولة</option>
+                        </Select>
+                        <Button type="submit" variant="outline" size="sm">
+                          تحديث
+                        </Button>
+                      </form>
+                    </td>
+                  ) : null}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {(complaints?.length ?? 0) === 0 ? <p className="py-4 text-foreground/60">لا توجد شكاوى بعد</p> : null}
       </Card>
     </div>
   );
