@@ -51,3 +51,26 @@ export const updateBranchSchema = branchFieldsSchema.extend({
 });
 
 export type UpdateBranchInput = z.infer<typeof updateBranchSchema>;
+
+export const addLoyaltyPointsSchema = z.object({
+  customerId: z.string().uuid(),
+  points: z.number().int().positive("عدد النقاط يجب أن يكون أكبر من صفر"),
+  reason: z.string().min(1, "سبب إضافة النقاط مطلوب"),
+});
+
+export type AddLoyaltyPointsInput = z.infer<typeof addLoyaltyPointsSchema>;
+
+export const createComplaintSchema = z.object({
+  customerId: z.string().uuid(),
+  branchId: z.string().uuid().optional(),
+  description: z.string().min(1, "نص الشكوى مطلوب"),
+});
+
+export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
+
+export const updateComplaintStatusSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["open", "in_progress", "resolved"]),
+});
+
+export type UpdateComplaintStatusInput = z.infer<typeof updateComplaintStatusSchema>;
