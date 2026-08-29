@@ -21,10 +21,11 @@ export type Permission =
   | "manage_returns"
   | "manage_invoice_requests"
   | "manage_settings"
-  | "view_reports";
+  | "view_reports"
+  | "manage_hr";
 
 const ROLE_PERMISSIONS: Record<Exclude<StaffRole, "admin" | "rep">, Permission[]> = {
-  accountant: ["view_reports", "manage_collections"],
+  accountant: ["view_reports", "manage_collections", "manage_hr"],
   marketing: ["manage_products", "view_reports"],
   sales: ["manage_customers", "manage_collections", "manage_returns", "view_reports"],
   production: ["manage_products", "manage_purchases", "manage_warehouse", "view_reports"],
@@ -76,6 +77,7 @@ export function permissionsForRole(role: StaffRole): Permission[] {
       "manage_invoice_requests",
       "manage_settings",
       "view_reports",
+      "manage_hr",
     ];
   }
   if (role === "rep") return [];
@@ -92,4 +94,5 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   manage_invoice_requests: "مراجعة طلبات تعديل الفواتير",
   manage_settings: "إدارة المستخدمين وإعدادات النظام",
   view_reports: "عرض التقارير",
+  manage_hr: "إدارة الموارد البشرية",
 };
