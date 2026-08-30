@@ -6,22 +6,26 @@ import { z } from "zod";
 // بغض النظر عن قناة الدخول (كاشير أو متجر).
 const localPhoneSchema = z.string().regex(/^05[0-9]{8}$/, "رقم جوال سعودي غير صالح (مثال: 05xxxxxxxx)");
 
+// دخول الكاشير: الموظف يختار اسمه من قائمة ثم يدخل رقمه الخاص — الجلسة
+// الناتجة تمثّل هذا الموظف بعينه (وليس جهازًا عامًا)، وتُنسب كل فاتورة كاشير
+// له (راجع cashier_employee_id بجدول invoices).
 export const pinLoginSchema = z.object({
+  employeeId: z.string().uuid(),
   pin: z.string().regex(/^[0-9]{4,6}$/, "رمز PIN يجب أن يكون بين 4 و6 أرقام"),
 });
 export type PinLoginInput = z.infer<typeof pinLoginSchema>;
 
-export const cashierTerminalSchema = z.object({
-  name: z.string().min(1, "اسم الحاوية مطلوب"),
+export const cashierEmployeeSchema = z.object({
+  name: z.string().min(1, "اسم الموظف مطلوب"),
   pin: z.string().regex(/^[0-9]{4,6}$/, "رمز PIN يجب أن يكون بين 4 و6 أرقام"),
 });
-export type CashierTerminalInput = z.infer<typeof cashierTerminalSchema>;
+export type CashierEmployeeInput = z.infer<typeof cashierEmployeeSchema>;
 
-export const resetCashierTerminalPinSchema = z.object({
-  terminalId: z.string().uuid(),
+export const resetCashierEmployeePinSchema = z.object({
+  employeeId: z.string().uuid(),
   pin: z.string().regex(/^[0-9]{4,6}$/, "رمز PIN يجب أن يكون بين 4 و6 أرقام"),
 });
-export type ResetCashierTerminalPinInput = z.infer<typeof resetCashierTerminalPinSchema>;
+export type ResetCashierEmployeePinInput = z.infer<typeof resetCashierEmployeePinSchema>;
 
 export const posSaleItemSchema = z.object({
   productId: z.string().uuid(),

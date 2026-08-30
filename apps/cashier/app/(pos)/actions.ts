@@ -7,10 +7,10 @@ import { renderQrCodeDataUrl, formatCurrency } from "@system2026/utils";
 import { createSupabaseAdminClient } from "../../lib/supabase-admin";
 import { CASHIER_SESSION_COOKIE, verifySessionToken } from "../../lib/session";
 
-async function requireTerminalId(): Promise<string> {
+async function requireEmployeeId(): Promise<string> {
   const session = await verifySessionToken(cookies().get(CASHIER_SESSION_COOKIE)?.value);
   if (!session) redirect("/login");
-  return session.terminalId;
+  return session.employeeId;
 }
 
 export async function logoutAction(): Promise<void> {
@@ -29,7 +29,7 @@ export type IdentifyCustomerResult = {
 // يستدعي find_or_create_customer_by_phone المشتركة مع apps/store، فيضمن
 // نفس هوية العميل بغض النظر عن قناة أول تواصل معه.
 export async function identifyCustomerAction(phone: string, name?: string): Promise<IdentifyCustomerResult> {
-  await requireTerminalId();
+  await requireEmployeeId();
 
   const parsed = identifyCustomerSchema.safeParse({ phone, name });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "رقم جوال غير صالح" };
@@ -71,7 +71,7 @@ export async function checkoutAction(input: {
   items: { productId: string; quantity: number }[];
   paymentMethod: "cash" | "credit" | "check" | "transfer";
 }): Promise<CheckoutResult> {
-  const terminalId = await requireTerminalId();
+  const employeeId = await requireEmployeeId();
 
   const parsed = posSaleSchema.safeParse({
     customerId: input.customerId,
@@ -82,7 +82,7 @@ export async function checkoutAction(input: {
 
   const supabase = createSupabaseAdminClient();
   const { data: invoiceId, error } = await supabase.rpc("create_cashier_sale", {
-    p_terminal_id: terminalId,
+    p_employee_id: employeeId,
     p_customer_id: parsed.data.customerId,
     p_items: parsed.data.items.map((item) => ({ product_id: item.productId, quantity: item.quantity })),
     p_payment_method: parsed.data.paymentMethod,

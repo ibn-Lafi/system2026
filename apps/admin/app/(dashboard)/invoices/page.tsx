@@ -160,7 +160,6 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
             <LinkButton href="/returns" variant="outline">
               المرتجعات
             </LinkButton>
-            <LinkButton href="/invoice-requests">طلبات تعديل الفواتير</LinkButton>
           </>
         }
       />

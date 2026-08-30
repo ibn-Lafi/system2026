@@ -24,7 +24,7 @@ const NAV_ITEMS: NavItemDef[] = [
     href: "/invoices",
     label: "الفواتير",
     icon: "invoice",
-    permissions: ["manage_collections", "manage_returns", "manage_invoice_requests"],
+    permissions: ["manage_collections", "manage_returns"],
   },
   { href: "/reports", label: "التقارير", icon: "chart", permissions: ["view_reports"] },
   { href: "/hr", label: "الموارد البشرية", icon: "hr", permissions: ["manage_hr"] },

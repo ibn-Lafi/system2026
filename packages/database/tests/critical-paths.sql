@@ -190,15 +190,14 @@ select pg_temp.assert_true(
 
 -- ========== 6. منع ازدواج إعادة المخزون: لا إلغاء لفاتورة سبق إرجاعها ==========
 -- invoice1 أُرجع جزء منها بالقسم 5 (process_return). لو سمحنا بإلغائها كاملة
--- الآن، cancel_invoice_within_grace_period كانت سترجّع كامل الكمية الأصلية
--- (20) للمخزون فوق الكمية المُرجعة أصلًا (5) — ازدواج توثّق. يجب أن تُرفض
--- العملية.
+-- الآن، cancel_invoice كانت سترجّع كامل الكمية الأصلية (20) للمخزون فوق
+-- الكمية المُرجعة أصلًا (5) — ازدواج توثّق. يجب أن تُرفض العملية.
 -- ملاحظة: psql لا يستبدل متغيراته داخل $$...$$، لذلك p_invoice_id يُمرَّر
 -- كوسيط عادي لدالة pg_temp (يُستبدل بشكل صحيح باستدعاء SELECT مباشر).
 create function pg_temp.assert_cancel_is_rejected(p_invoice_id uuid, p_reason text)
 returns void language plpgsql as $$
 begin
-  perform public.cancel_invoice_within_grace_period(p_invoice_id, p_reason);
+  perform public.cancel_invoice(p_invoice_id, p_reason);
   raise exception 'FAILED: كان يجب رفض إلغاء فاتورة سبق تسجيل مرتجع عليها';
 exception
   when others then
@@ -221,7 +220,7 @@ select pg_temp.assert_true(
   'رصيد المخزون المشترك يجب ألا يتأثر بمحاولة الإلغاء المرفوضة (يبقى 345)'
 );
 
--- ========== 6.1 إلغاء فاتورة بفترة السماح بنجاح (فاتورة جديدة بلا مرتجعات) ==========
+-- ========== 6.1 إلغاء فاتورة فوري بنجاح (فاتورة جديدة بلا مرتجعات) ==========
 select public.create_invoice_with_stock_check(
   'e1111111-0000-0000-0000-000000000001',
   jsonb_build_array(jsonb_build_object(
@@ -231,7 +230,7 @@ select public.create_invoice_with_stock_check(
   )), 'cash'
 ) as invoice_id \gset invoice3_
 
-select public.cancel_invoice_within_grace_period(:'invoice3_invoice_id', 'خطأ إدخال');
+select public.cancel_invoice(:'invoice3_invoice_id', 'خطأ إدخال');
 
 select pg_temp.assert_true(
   (select status from public.invoices where id = :'invoice3_invoice_id') = 'cancelled',
@@ -344,23 +343,23 @@ select pg_temp.assert_true(
   'find_or_create_customer_by_phone أنشأ أكثر من عميل لنفس رقم الجوال (كسر uniqueness)'
 );
 
-select public.create_cashier_terminal('كاشير 1', '1234') as terminal1_id \gset
+select public.create_cashier_employee('موظف كاشير 1', '1234') as employee1_id \gset
 
 select pg_temp.assert_true(
-  (select is_active from public.cashier_terminals where id = :'terminal1_id') = true,
-  'create_cashier_terminal لم ينشئ حاوية نشطة'
+  (select is_active from public.cashier_employees where id = :'employee1_id') = true,
+  'create_cashier_employee لم ينشئ موظفًا نشطًا'
 );
 select pg_temp.assert_true(
-  public.verify_cashier_terminal_pin('1234') = :'terminal1_id'::uuid,
-  'verify_cashier_terminal_pin لم يتحقق من PIN الصحيح'
+  public.verify_cashier_employee_pin(:'employee1_id'::uuid, '1234') = true,
+  'verify_cashier_employee_pin لم يتحقق من PIN الصحيح'
 );
 select pg_temp.assert_true(
-  public.verify_cashier_terminal_pin('9999') is null,
-  'verify_cashier_terminal_pin يجب أن يرجّع null لـPIN خاطئ'
+  public.verify_cashier_employee_pin(:'employee1_id'::uuid, '9999') = false,
+  'verify_cashier_employee_pin يجب أن يرجّع false لـPIN خاطئ'
 );
 
 select public.create_cashier_sale(
-  :'terminal1_id', :'cust1_id',
+  :'employee1_id', :'cust1_id',
   jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 3)),
   'cash'
 ) as cashier_sale_id \gset
@@ -374,6 +373,10 @@ select pg_temp.assert_true(
   'create_cashier_sale لم يسجّل sale_channel=cashier'
 );
 select pg_temp.assert_true(
+  (select cashier_employee_id from public.invoices where id = :'cashier_sale_id') = :'employee1_id'::uuid,
+  'create_cashier_sale لم يسجّل الموظف الذي أصدر الفاتورة'
+);
+select pg_temp.assert_true(
   (select total_amount from public.invoices where id = :'cashier_sale_id') = 34.50,
   'إجمالي فاتورة الكاشير غير صحيح (متوقع 34.50 لـ3 قطع بسعر 11.50 شامل الضريبة)'
 );
@@ -385,7 +388,7 @@ select pg_temp.assert_true(
 do $$
 begin
   perform public.create_cashier_sale(
-    (select id from public.cashier_terminals where name = 'كاشير 1'),
+    (select id from public.cashier_employees where name = 'موظف كاشير 1'),
     (select id from public.customers where phone = '+966501111111'),
     jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 1000)),
     'cash'
@@ -398,20 +401,20 @@ exception
     end if;
 end $$;
 
-select public.set_cashier_terminal_active((select id from public.cashier_terminals where name = 'كاشير 1'), false);
+select public.set_cashier_employee_active((select id from public.cashier_employees where name = 'موظف كاشير 1'), false);
 
 do $$
 begin
   perform public.create_cashier_sale(
-    (select id from public.cashier_terminals where name = 'كاشير 1'),
+    (select id from public.cashier_employees where name = 'موظف كاشير 1'),
     (select id from public.customers where phone = '+966501111111'),
     jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 1)),
     'cash'
   );
-  raise exception 'FAILED: كان يجب رفض البيع من حاوية كاشير معطّلة';
+  raise exception 'FAILED: كان يجب رفض البيع من موظف كاشير معطّل';
 exception
   when others then
-    if sqlerrm = 'FAILED: كان يجب رفض البيع من حاوية كاشير معطّلة' then
+    if sqlerrm = 'FAILED: كان يجب رفض البيع من موظف كاشير معطّل' then
       raise;
     end if;
 end $$;
@@ -490,8 +493,8 @@ select pg_temp.assert_true(
   'anon لا يجب أن يصل لجدول customers مباشرة إطلاقًا (RLS)'
 );
 select pg_temp.assert_true(
-  (select count(*) from public.cashier_terminals) = 0,
-  'anon لا يجب أن يصل لجدول cashier_terminals إطلاقًا (RLS)'
+  (select count(*) from public.cashier_employees) = 0,
+  'anon لا يجب أن يصل لجدول cashier_employees إطلاقًا (RLS)'
 );
 select pg_temp.assert_true(
   (select count(*) from public.public_store_locations) = 1,

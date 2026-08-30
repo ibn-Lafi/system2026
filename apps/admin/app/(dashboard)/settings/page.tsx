@@ -7,7 +7,6 @@ import { getCurrentUserRole } from "../../../lib/get-current-role";
 import { hasPermission } from "../../../lib/permissions";
 import {
   updateCompanyInfoAction,
-  updateInvoiceGracePeriodAction,
   updateExpiryAlertThresholdAction,
   updateLoyaltyRatioAction,
 } from "./actions";
@@ -17,7 +16,6 @@ type Settings = {
   vat_registration_number: string;
   commercial_registration_number: string;
   company_address: string;
-  invoice_edit_grace_period_minutes: number;
   expiry_alert_days_threshold: number;
   loyalty_riyals_per_point: number;
 };
@@ -30,10 +28,10 @@ export default async function SettingsPage() {
   const { data: settings } = await supabase
     .from("system_settings")
     .select<
-      "company_name, vat_registration_number, commercial_registration_number, company_address, invoice_edit_grace_period_minutes, expiry_alert_days_threshold, loyalty_riyals_per_point",
+      "company_name, vat_registration_number, commercial_registration_number, company_address, expiry_alert_days_threshold, loyalty_riyals_per_point",
       Settings
     >(
-      "company_name, vat_registration_number, commercial_registration_number, company_address, invoice_edit_grace_period_minutes, expiry_alert_days_threshold, loyalty_riyals_per_point",
+      "company_name, vat_registration_number, commercial_registration_number, company_address, expiry_alert_days_threshold, loyalty_riyals_per_point",
     )
     .eq("id", 1)
     .single();
@@ -99,32 +97,6 @@ export default async function SettingsPage() {
         </Card>
 
         <Card>
-          <h2 className="font-semibold">فترة سماح تعديل/إلغاء الفاتورة</h2>
-          <p className="mt-1 text-sm text-foreground/60">
-            راجع requirements.md §7.7 — الفترة الحالية:{" "}
-            <span className="font-semibold text-foreground">
-              {settings?.invoice_edit_grace_period_minutes ?? 30} دقيقة
-            </span>
-          </p>
-          <div className="mt-4">
-            <ModalTrigger label="تعديل" title="فترة سماح تعديل/إلغاء الفاتورة" variant="outline">
-              <ActionForm action={updateInvoiceGracePeriodAction} className="space-y-3">
-                <div>
-                  <label className="mb-1 block text-sm">فترة السماح (دقيقة)</label>
-                  <Input
-                    name="invoiceEditGracePeriodMinutes"
-                    type="number"
-                    min={1}
-                    defaultValue={settings?.invoice_edit_grace_period_minutes ?? 30}
-                    required
-                  />
-                </div>
-              </ActionForm>
-            </ModalTrigger>
-          </div>
-        </Card>
-
-        <Card>
           <h2 className="font-semibold">تنبيه قرب انتهاء الصلاحية</h2>
           <p className="mt-1 text-sm text-foreground/60">
             عدد الأيام قبل الانتهاء الذي يظهر عنده تنبيه بالتقارير — العتبة الحالية:{" "}
@@ -178,13 +150,13 @@ export default async function SettingsPage() {
         </Card>
 
         <Card>
-          <h2 className="font-semibold">حاويات الكاشير</h2>
+          <h2 className="font-semibold">موظفو الكاشير</h2>
           <p className="mt-1 text-sm text-foreground/60">
-            إدارة أجهزة نقطة البيع (الاسم ورمز PIN) المستخدمة بتطبيق الكاشير المستقل
+            إدارة موظفي نقطة البيع (الاسم ورمز PIN الخاص بكل موظف) المستخدمين بتطبيق الكاشير المستقل
           </p>
           <div className="mt-4">
-            <Link href="/settings/cashier-terminals">
-              <Button variant="outline">فتح صفحة حاويات الكاشير</Button>
+            <Link href="/settings/cashier-employees">
+              <Button variant="outline">فتح صفحة موظفي الكاشير</Button>
             </Link>
           </div>
         </Card>

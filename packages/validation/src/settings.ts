@@ -7,10 +7,6 @@ export const updateCompanyInfoSchema = z.object({
   companyAddress: z.string().optional(),
 });
 
-export const updateInvoiceGracePeriodSchema = z.object({
-  invoiceEditGracePeriodMinutes: z.number().int().positive(),
-});
-
 export const updateExpiryAlertThresholdSchema = z.object({
   expiryAlertDaysThreshold: z.number().int().positive(),
 });
@@ -78,7 +74,6 @@ export const updateTestimonialsContentSchema = z.object({
 });
 
 export type UpdateCompanyInfoInput = z.infer<typeof updateCompanyInfoSchema>;
-export type UpdateInvoiceGracePeriodInput = z.infer<typeof updateInvoiceGracePeriodSchema>;
 export type UpdateExpiryAlertThresholdInput = z.infer<typeof updateExpiryAlertThresholdSchema>;
 export type UpdateStoreBrandingInput = z.infer<typeof updateStoreBrandingSchema>;
 export type UpdateStoreSocialLinksInput = z.infer<typeof updateStoreSocialLinksSchema>;
