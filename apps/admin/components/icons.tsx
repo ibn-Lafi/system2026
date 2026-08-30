@@ -186,6 +186,14 @@ export function PersonIcon(p: IconProps) {
   );
 }
 
+export function ArrowRightIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <path d="M9 6l6 6-6 6" />
+    </Icon>
+  );
+}
+
 export function BellIcon(p: IconProps) {
   return (
     <Icon {...p}>

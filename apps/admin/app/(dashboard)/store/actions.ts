@@ -6,7 +6,6 @@ import {
   updateStoreBrandingSchema,
   updateStoreSocialLinksSchema,
   updateStoreHomepageSectionsSchema,
-  updateStoreLandingModeSchema,
 } from "@system2026/validation";
 import { uploadImage } from "../../../lib/upload-image";
 import type { ActionState } from "../../../components/action-form";
@@ -40,7 +39,7 @@ export async function updateStoreBrandingAction(
     .eq("id", 1);
 
   if (error) return { error: error.message };
-  revalidatePath("/store");
+  revalidatePath("/store/theme");
   return { success: true };
 }
 
@@ -64,7 +63,7 @@ export async function updateStoreLogoAction(
     .eq("id", 1);
 
   if (error) return { error: error.message };
-  revalidatePath("/store");
+  revalidatePath("/store/theme");
   return { success: true };
 }
 
@@ -95,34 +94,7 @@ export async function updateStoreSocialLinksAction(
     .eq("id", 1);
 
   if (error) return { error: error.message };
-  revalidatePath("/store");
-  return { success: true };
-}
-
-export async function updateStoreLandingModeAction(
-  _prevState: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const parsed = updateStoreLandingModeSchema.safeParse({
-    showLandingPage: formData.get("showLandingPage") === "on",
-  });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
-
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { error } = await supabase
-    .from("store_settings")
-    .update({
-      show_landing_page: parsed.data.showLandingPage,
-      updated_by: user?.id,
-    })
-    .eq("id", 1);
-
-  if (error) return { error: error.message };
-  revalidatePath("/store");
+  revalidatePath("/store/theme");
   return { success: true };
 }
 

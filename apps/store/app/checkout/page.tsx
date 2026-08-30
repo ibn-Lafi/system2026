@@ -23,7 +23,11 @@ export default function CheckoutPage() {
     setIdentifyError(null);
     setIdentifying(true);
     try {
-      const result = await identifyStoreCustomerAction(phone, name || undefined);
+      const result = await identifyStoreCustomerAction(
+        phone,
+        name || undefined,
+        items.map((i) => ({ productId: i.productId, name: i.name, price: i.price, quantity: i.quantity })),
+      );
       if (result.error) {
         setIdentifyError(result.error);
         return;

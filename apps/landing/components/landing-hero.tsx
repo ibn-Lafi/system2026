@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { submitStoreLeadAction, type SubmitLeadState } from "../app/actions";
+import { submitLeadAction, type SubmitLeadState } from "../app/actions";
 import { thmanyahSans } from "../lib/thmanyah-font";
 import { BrandLogosSlider } from "./brand-logos-slider";
 
@@ -109,7 +109,7 @@ function SubmitButton() {
 }
 
 export function LandingHero() {
-  const [state, formAction] = useFormState(submitStoreLeadAction, initialState);
+  const [state, formAction] = useFormState(submitLeadAction, initialState);
 
   return (
     <main

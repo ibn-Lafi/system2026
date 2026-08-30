@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select<"role", { role: StaffRole }>("role")
+    .select<"name, role", { name: string; role: StaffRole }>("name, role")
     .eq("id", user.id)
     .single();
 
@@ -27,7 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const notifications = await getNotifications(supabase, role);
 
   return (
-    <ModuleShell role={role} notifications={notifications}>
+    <ModuleShell role={role} profileName={profile?.name} notifications={notifications}>
       {children}
     </ModuleShell>
   );

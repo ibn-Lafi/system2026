@@ -28,11 +28,12 @@ export const MODULES: ModuleDef[] = [
   {
     key: "website",
     label: "الموقع الإلكتروني",
-    description: "المتجر العام: الهوية، المحتوى، والتصميم",
+    description: "المتجر وصفحة الهبوط: الهوية، المحتوى، والتصميم",
     icon: "cart",
     pages: [
-      { href: "/store", label: "المتجر الإلكتروني", icon: "cart", permissions: ["manage_settings"] },
-      { href: "/store/theme", label: "تصميم المتجر", icon: "settings", permissions: ["manage_settings"] },
+      { href: "/store", label: "المتجر", icon: "cart", permissions: ["manage_settings"] },
+      { href: "/store/theme", label: "التصميم", icon: "settings", permissions: ["manage_settings"] },
+      { href: "/landing", label: "صفحة الهبوط", icon: "chart", permissions: ["manage_settings"] },
     ],
   },
   {
@@ -50,10 +51,11 @@ export const MODULES: ModuleDef[] = [
   {
     key: "operations",
     label: "التشغيل",
-    description: "المخزون، الموردون، والمشتريات",
+    description: "المنتجات، المخزون، الموردون، والمشتريات",
     icon: "warehouse",
     pages: [
       { href: "/operations", label: "نظرة عامة", icon: "warehouse" },
+      { href: "/products", label: "المنتجات", icon: "box", permissions: ["manage_products"] },
       { href: "/warehouse", label: "المخزون", icon: "warehouse", permissions: ["manage_warehouse"] },
       { href: "/suppliers", label: "الموردين والمشتريات", icon: "truck", permissions: ["manage_purchases"] },
     ],
@@ -62,12 +64,11 @@ export const MODULES: ModuleDef[] = [
   {
     key: "marketing",
     label: "التسويق",
-    description: "المنتجات وكتالوج المتجر، وبيانات الزوار المهتمين",
+    description: "السلات المتروكة بالمتجر الإلكتروني",
     icon: "chart",
     pages: [
       { href: "/marketing", label: "نظرة عامة", icon: "chart" },
-      { href: "/products", label: "المنتجات", icon: "box", permissions: ["manage_products"] },
-      { href: "/store/leads", label: "بيانات الزوار", icon: "users", permissions: ["manage_settings"] },
+      { href: "/marketing/abandoned-carts", label: "السلات المتروكة", icon: "cart", permissions: ["manage_settings"] },
     ],
   },
   {

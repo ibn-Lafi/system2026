@@ -40,8 +40,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <CartProvider>
           {children}
-          {settings.show_landing_page ? null : <Footer settings={settings} />}
-          {settings.show_landing_page ? null : <CartBar />}
+          <Footer settings={settings} />
+          <CartBar />
         </CartProvider>
       </body>
     </html>

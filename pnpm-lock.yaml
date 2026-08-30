@@ -146,6 +146,67 @@ importers:
         specifier: ^5.5.0
         version: 5.9.3
 
+  apps/landing:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.111.0
+        version: 2.112.3
+      '@system2026/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@system2026/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
+      next:
+        specifier: ^14.2.5
+        version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+    devDependencies:
+      '@system2026/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      '@types/react':
+        specifier: ^18.3.0
+        version: 18.3.31
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.31)
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^7.16.0
+        version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^7.16.0
+        version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.5.4(postcss@8.5.26)
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.1
+      eslint-config-next:
+        specifier: ^14.2.5
+        version: 14.2.35(eslint@8.57.1)(typescript@5.9.3)
+      postcss:
+        specifier: ^8.4.40
+        version: 8.5.26
+      tailwindcss:
+        specifier: ^3.4.7
+        version: 3.4.19(tsx@4.23.12)
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
   apps/store:
     dependencies:
       '@supabase/supabase-js':

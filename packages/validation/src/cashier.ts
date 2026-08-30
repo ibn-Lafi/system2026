@@ -39,6 +39,18 @@ export const storeOrderSchema = z.object({
 });
 export type StoreOrderInput = z.infer<typeof storeOrderSchema>;
 
+// لقطة سلة (للسلات المتروكة، store_cart_sessions) — تُرسَل من الفرونت إند
+// فقط للعرض بلوحة التحكم لاحقًا، لا تُستخدم في أي حساب مالي، لذا تحقّق بنيوي
+// خفيف يكفي (طول الاسم/عدد البنود) بدل تكرار posSaleItemSchema الأدق.
+export const cartSnapshotItemSchema = z.object({
+  productId: z.string().uuid(),
+  name: z.string().min(1).max(200),
+  price: z.number().nonnegative(),
+  quantity: z.number().int().positive(),
+});
+export const cartSnapshotSchema = z.array(cartSnapshotItemSchema).max(100);
+export type CartSnapshotInput = z.infer<typeof cartSnapshotSchema>;
+
 export const updateLoyaltyRatioSchema = z.object({
   loyaltyRiyalsPerPoint: z.number().positive("المعدّل يجب أن يكون أكبر من صفر"),
 });

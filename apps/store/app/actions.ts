@@ -1,44 +1,51 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { createSupabaseServerClient } from "@system2026/database/server";
-import { submitStoreLeadSchema, identifyCustomerSchema, storeOrderSchema } from "@system2026/validation";
+import { identifyCustomerSchema, storeOrderSchema, cartSnapshotSchema, type CartSnapshotInput } from "@system2026/validation";
 import { createSupabaseAdminClient } from "../lib/supabase-admin";
 import { isRateLimited } from "../lib/rate-limit";
 
 const STORE_CUSTOMER_COOKIE = "store_customer_id";
 
-export type SubmitLeadState = { error?: string; success?: boolean };
-
-// أول عملية كتابة عامة (anon) من المتجر — محكومة بـ RLS صريحة على
-// store_leads (INSERT فقط، لا SELECT/UPDATE/DELETE لـ anon). راجع migration
-// 20260822160000_store_leads_landing_page.sql.
-export async function submitStoreLeadAction(
-  _prevState: SubmitLeadState,
-  formData: FormData,
-): Promise<SubmitLeadState> {
-  const parsed = submitStoreLeadSchema.safeParse({
-    phoneNumber: formData.get("phoneNumber"),
-    desiredStore: formData.get("desiredStore"),
-  });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
-
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase.from("store_leads").insert({
-    phone_number: `+966${parsed.data.phoneNumber.slice(1)}`,
-    desired_store: parsed.data.desiredStore,
-  });
-
-  if (error) return { error: "حدث خطأ، حاول مرة أخرى" };
-  return { success: true };
-}
-
 export type IdentifyStoreCustomerResult = { customerId?: string; customerName?: string; error?: string };
+
+// تسجيل/تحديث لقطة السلة الحالية للعميل بجدول store_cart_sessions (السلات
+// المتروكة، راجع migration 20260830040000). أفضل-جهد بحت: أي خطأ هنا لا
+// يجوز أن يُفشل تحديد العميل نفسه، فهو تتبّع تسويقي وليس جزءًا من التدفّق
+// الحرج (لا فاتورة ولا مخزون هنا).
+async function recordCartSnapshot(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  customerId: string,
+  cartItems: CartSnapshotInput,
+): Promise<void> {
+  if (cartItems.length === 0) return;
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const { data: existing } = await supabase
+    .from("store_cart_sessions")
+    .select("id")
+    .eq("customer_id", customerId)
+    .is("converted_at", null)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase
+      .from("store_cart_sessions")
+      .update({ items: cartItems, subtotal, last_activity_at: new Date().toISOString() })
+      .eq("id", existing.id);
+  } else {
+    await supabase.from("store_cart_sessions").insert({ customer_id: customerId, items: cartItems, subtotal });
+  }
+}
 
 // يُنادى مباشرة من صفحة /checkout عند إدخال رقم الجوال — يستدعي نفس
 // find_or_create_customer_by_phone المشتركة مع apps/cashier، فيضمن هوية
 // عميل واحدة موحّدة بغض النظر عن قناة أول تواصل (راجع CLAUDE.md محدَّث).
-export async function identifyStoreCustomerAction(phone: string, name?: string): Promise<IdentifyStoreCustomerResult> {
+export async function identifyStoreCustomerAction(
+  phone: string,
+  name: string | undefined,
+  cartItems: CartSnapshotInput,
+): Promise<IdentifyStoreCustomerResult> {
   const parsed = identifyCustomerSchema.safeParse({ phone, name });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "رقم جوال غير صالح" };
 
@@ -67,6 +74,11 @@ export async function identifyStoreCustomerAction(phone: string, name?: string):
     path: "/",
     maxAge: 60 * 60 * 24 * 180,
   });
+
+  const parsedCart = cartSnapshotSchema.safeParse(cartItems);
+  if (parsedCart.success) {
+    await recordCartSnapshot(supabase, customerId, parsedCart.data);
+  }
 
   return { customerId, customerName: customer?.name };
 }
@@ -100,6 +112,14 @@ export async function placeOrderAction(items: { productId: string; quantity: num
     .select<"invoice_number", { invoice_number: number }>("invoice_number")
     .eq("id", invoiceId)
     .single();
+
+  // أفضل-جهد: تحويل لقطة السلة (إن وُجدت) من "مفتوحة" إلى "محوّلة" — لم تعد
+  // سلة متروكة. لا يُفشل الطلب لو تعذّر هذا التحديث لأي سبب.
+  await supabase
+    .from("store_cart_sessions")
+    .update({ converted_at: new Date().toISOString() })
+    .eq("customer_id", parsed.data.customerId)
+    .is("converted_at", null);
 
   return { invoiceNumber: invoice?.invoice_number };
 }
