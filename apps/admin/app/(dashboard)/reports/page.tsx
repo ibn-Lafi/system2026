@@ -22,7 +22,7 @@ export default async function ReportsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "التقارير"]} />}
+        breadcrumb={<Breadcrumb items={["لوحة التحكم", "المبيعات", "التقارير"]} />}
         title="التقارير"
         subtitle="اختر نوع التقرير والفترة، ثم نزّل الملف (CSV يفتح مباشرة بإكسل)"
       />

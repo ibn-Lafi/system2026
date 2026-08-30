@@ -1,47 +1,12 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@system2026/database/server";
-import { AdminSidebar } from "../../components/admin-sidebar";
-import { NotificationsBell } from "../../components/notifications-bell";
-import type { IconName } from "../../components/admin-nav";
-import { hasPermission, type Permission, type StaffRole } from "../../lib/permissions";
+import { ModuleShell } from "../../components/module-shell";
+import type { StaffRole } from "../../lib/permissions";
 import { getNotifications } from "../../lib/notifications";
 
-// ملاحظة: icon هنا اسم (string) وليس دالة React — مكوّنات الأيقونات لا يمكن
-// تمريرها كـ props من Server Component (هذا الملف) لـ Client Component
-// (AdminSidebar/AdminNav)، فالربط الفعلي بين الاسم والمكوّن يتم داخل
-// admin-nav.tsx (ICON_MAP) على جانب العميل.
-//
-// permission: أي صلاحية من هذي القائمة تكفي لإظهار العنصر (OR)؛ بدونها =
-// يظهر للجميع (مثل الرئيسية). هذا إخفاء واجهة فقط — الفرض الفعلي بـ RLS
-// (راجع apps/admin/lib/permissions.ts).
-type NavItemDef = { href: string; label: string; icon: IconName; permissions?: Permission[] };
-
-const NAV_ITEMS: NavItemDef[] = [
-  { href: "/", label: "الرئيسية", icon: "home" },
-  { href: "/products", label: "المنتجات", icon: "box", permissions: ["manage_products"] },
-  { href: "/suppliers", label: "الموردين", icon: "truck", permissions: ["manage_purchases"] },
-  { href: "/warehouse", label: "المخزون", icon: "warehouse", permissions: ["manage_warehouse"] },
-  { href: "/customers", label: "العملاء", icon: "store", permissions: ["manage_customers"] },
-  {
-    href: "/invoices",
-    label: "الفواتير",
-    icon: "invoice",
-    permissions: ["manage_collections", "manage_returns"],
-  },
-  { href: "/reports", label: "التقارير", icon: "chart", permissions: ["view_reports"] },
-  { href: "/hr", label: "الموارد البشرية", icon: "hr", permissions: ["manage_hr"] },
-  { href: "/store", label: "المتجر الإلكتروني", icon: "cart", permissions: ["manage_settings"] },
-];
-
-const SETTINGS_ITEMS: NavItemDef[] = [
-  { href: "/settings", label: "الإعدادات", icon: "settings", permissions: ["manage_settings"] },
-];
-
-function isVisible(item: NavItemDef, role: StaffRole | null) {
-  if (!item.permissions || item.permissions.length === 0) return true;
-  return item.permissions.some((p) => hasPermission(role, p));
-}
-
+// بناء الشريط الجانبي (سياقي حسب الوحدة الحالية — راجع lib/modules.ts) يتم
+// على جانب العميل بـModuleShell (يحتاج usePathname). هذا الملف يتكفّل فقط
+// بالتحقق من الجلسة وجلب البيانات اللازمة (الدور، الاسم، التنبيهات).
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createSupabaseServerClient();
   const {
@@ -59,30 +24,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .single();
 
   const role = profile?.role ?? null;
-  const visibleNavItems = NAV_ITEMS.filter((item) => isVisible(item, role)).map(
-    ({ href, label, icon }) => ({ href, label, icon }),
-  );
-  const visibleSettingsItems = SETTINGS_ITEMS.filter((item) => isVisible(item, role)).map(
-    ({ href, label, icon }) => ({ href, label, icon }),
-  );
   const notifications = await getNotifications(supabase, role);
 
   return (
-    <div className="flex min-h-screen bg-muted/40">
-      <AdminSidebar
-        navItems={visibleNavItems}
-        settingsItems={visibleSettingsItems}
-        profileName={profile?.name}
-        profileRole={role ?? "accountant"}
-      />
-      <main className="flex-1 p-6 sm:p-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-4 flex justify-end">
-            <NotificationsBell notifications={notifications} />
-          </div>
-          {children}
-        </div>
-      </main>
-    </div>
+    <ModuleShell role={role} profileName={profile?.name} notifications={notifications}>
+      {children}
+    </ModuleShell>
   );
 }
