@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Badge, Button, Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Badge, Button, Card, Input, ModalTrigger, PageHeader, Select } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -63,9 +63,7 @@ export default async function HrLeavesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "الإجازات"]} />}
         title="الإجازات"
-        subtitle="طلبات الإجازة واعتمادها"
         actions={
           <ModalTrigger label="+ طلب إجازة" title="تقديم طلب إجازة">
             <ActionForm action={createLeaveRequestAction} className="space-y-3">

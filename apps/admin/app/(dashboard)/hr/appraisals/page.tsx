@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Badge, Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select, Textarea } from "@system2026/ui";
+import { Badge, Card, Input, ModalTrigger, PageHeader, Select, Textarea } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -41,9 +41,7 @@ export default async function HrAppraisalsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "التقييم الوظيفي"]} />}
         title="التقييم الوظيفي"
-        subtitle="تقييمات دورية لأداء الموظفين"
         actions={
           <ModalTrigger label="+ تسجيل تقييم" title="تسجيل تقييم وظيفي" size="lg">
             <ActionForm action={createAppraisalAction} className="space-y-3">

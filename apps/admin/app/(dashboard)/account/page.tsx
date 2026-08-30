@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Badge, Button, Card, Input, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Badge, Button, Card, Input, PageHeader } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
 import { PERMISSION_LABELS, STAFF_ROLE_LABELS, permissionsForRole, type StaffRole } from "../../../lib/permissions";
@@ -25,9 +25,7 @@ export default async function AccountPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الحساب الشخصي"]} />}
         title="الحساب الشخصي"
-        subtitle="بياناتك، دورك، وتعديل اسمك وكلمة المرور"
       />
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, Button, ModalTrigger, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Card, Button, ModalTrigger, PageHeader } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
 import { hasPermission } from "../../../../lib/permissions";
@@ -25,9 +25,7 @@ export default async function StoreThemePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "المتجر الإلكتروني", "تصميم المتجر"]} />}
         title="تصميم المتجر"
-        subtitle="الثيم الافتراضي، تخصيص بالكود، وأقسام جاهزة للصفحة الرئيسية"
         actions={
           <Link href="/store">
             <Button variant="outline">رجوع لإعدادات المتجر</Button>

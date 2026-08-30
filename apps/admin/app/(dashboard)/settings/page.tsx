@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Button, Card, Input, ModalTrigger, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Button, Card, Input, ModalTrigger, PageHeader } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
 import { getCurrentUserRole } from "../../../lib/get-current-role";
@@ -39,9 +39,7 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الإعدادات"]} />}
         title="الإعدادات"
-        subtitle="بيانات الشركة، المستخدمون، وإعدادات النظام"
       />
 
       <div className="grid gap-4 sm:grid-cols-2">

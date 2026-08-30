@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, Input, Button, ModalTrigger, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Card, Input, Button, ModalTrigger, PageHeader } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
 import { getCurrentUserRole } from "../../../lib/get-current-role";
@@ -45,9 +45,7 @@ export default async function StoreControlPanelPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "المتجر الإلكتروني"]} />}
         title="التحكم بالمتجر الإلكتروني"
-        subtitle="الهوية، الشعار، النصوص، روابط التواصل الاجتماعي، وأقسام الصفحة الرئيسية للمتجر العام"
       />
 
       <div className="grid gap-4 sm:grid-cols-2">

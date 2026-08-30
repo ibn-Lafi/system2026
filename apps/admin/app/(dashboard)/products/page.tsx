@@ -1,4 +1,4 @@
-import { Badge, Button, Card, DatePicker, Input, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Badge, Button, Card, DatePicker, Input, ModalTrigger, PageHeader, Select } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
@@ -57,9 +57,7 @@ export default async function ProductsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "المنتجات"]} />}
         title="المنتجات"
-        subtitle="إدارة كتالوج المنتجات والفئات"
         actions={
           canManage ? (
             <>

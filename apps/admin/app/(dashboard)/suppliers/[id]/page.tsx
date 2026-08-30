@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card, DatePicker, Input, ModalTrigger, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
+import { Card, DatePicker, Input, ModalTrigger, PageHeader, Select, cn } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
@@ -174,9 +174,7 @@ export default async function SupplierDetailPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموردين", supplier.name]} />}
         title={supplier.name}
-        subtitle="كشف حساب المورد: بياناته، منتجاته، فواتير الشراء، والمستحق"
         actions={
           canManage ? (
             <ModalTrigger label="+ فاتورة شراء" title={`فاتورة شراء — ${supplier.name}`} size="lg">

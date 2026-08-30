@@ -11,19 +11,13 @@ import { ModuleTile } from "../../components/module-tile";
 export default async function ModulesHubPage() {
   const role = await getCurrentUserRole();
 
-  const now = new Date();
-  const dateLabel = now.toLocaleDateString("ar-SA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-
   const tiles = MODULES.map((mod) => ({ mod, href: getModuleTileHref(mod, role) })).filter(
     (t): t is { mod: (typeof MODULES)[number]; href: string } => t.href !== null,
   );
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">أقسام النظام</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{dateLabel} — اختر القسم الذي تريد العمل عليه</p>
-      </div>
+      <h1 className="text-2xl font-bold">أقسام النظام</h1>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tiles.map(({ mod, href }) => (

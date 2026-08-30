@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Button, Card, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Button, Card, PageHeader } from "@system2026/ui";
 import { getCurrentUserRole } from "../../../lib/get-current-role";
 import { hasPermission } from "../../../lib/permissions";
 
@@ -25,9 +25,7 @@ export default async function HrHubPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية"]} />}
         title="الموارد البشرية"
-        subtitle="الموظفون، الحضور، الإجازات، الرواتب، والتقييم الوظيفي"
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

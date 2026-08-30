@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Badge, Card, Input, ModalTrigger, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Badge, Card, Input, ModalTrigger, PageHeader } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -52,9 +52,7 @@ export default async function HrPayrollPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "مسير الرواتب"]} />}
         title="مسير الرواتب"
-        subtitle="إنشاء مسير رواتب شهري لكل الموظفين النشطين وتعديل خصومات كل بند قبل الصرف"
         actions={
           <ModalTrigger label="+ إنشاء مسير جديد" title="إنشاء مسير رواتب">
             <ActionForm action={generatePayrollRunAction} className="space-y-3">
