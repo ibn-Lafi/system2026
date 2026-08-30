@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { AdminSidebar } from "../../components/admin-sidebar";
+import { NotificationsBell } from "../../components/notifications-bell";
 import type { IconName } from "../../components/admin-nav";
 import { hasPermission, type Permission, type StaffRole } from "../../lib/permissions";
+import { getNotifications } from "../../lib/notifications";
 
 // ملاحظة: icon هنا اسم (string) وليس دالة React — مكوّنات الأيقونات لا يمكن
 // تمريرها كـ props من Server Component (هذا الملف) لـ Client Component
@@ -63,6 +65,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const visibleSettingsItems = SETTINGS_ITEMS.filter((item) => isVisible(item, role)).map(
     ({ href, label, icon }) => ({ href, label, icon }),
   );
+  const notifications = await getNotifications(supabase, role);
 
   return (
     <div className="flex min-h-screen bg-muted/40">
@@ -73,7 +76,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
         profileRole={role ?? "accountant"}
       />
       <main className="flex-1 p-6 sm:p-8">
-        <div className="mx-auto max-w-6xl">{children}</div>
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-4 flex justify-end">
+            <NotificationsBell notifications={notifications} />
+          </div>
+          {children}
+        </div>
       </main>
     </div>
   );
