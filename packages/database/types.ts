@@ -363,21 +363,6 @@ export type Database = {
         },
         never
       >;
-      invoice_edit_requests: Table<
-        {
-          id: string;
-          invoice_id: string;
-          requested_by: string;
-          reason: string;
-          requested_changes: Json;
-          status: Database["public"]["Enums"]["edit_request_status"];
-          reviewed_by: string | null;
-          reviewed_at: string | null;
-          created_at: string;
-          updated_at: string;
-        },
-        { id?: string; invoice_id: string; requested_by: string; reason: string; requested_changes: Json }
-      >;
       credit_notes: Table<
         {
           id: string;
@@ -438,7 +423,6 @@ export type Database = {
           vat_registration_number: string;
           commercial_registration_number: string;
           company_address: string;
-          invoice_edit_grace_period_minutes: number;
           expiry_alert_days_threshold: number;
           loyalty_riyals_per_point: number;
           updated_at: string;
@@ -450,7 +434,6 @@ export type Database = {
           vat_registration_number?: string;
           commercial_registration_number?: string;
           company_address?: string;
-          invoice_edit_grace_period_minutes?: number;
           expiry_alert_days_threshold?: number;
           loyalty_riyals_per_point?: number;
           updated_by?: string | null;
@@ -901,17 +884,9 @@ export type Database = {
         Args: { p_customer_id: string; p_invoice_id: string | null; p_items: Json };
         Returns: string;
       };
-      cancel_invoice_within_grace_period: {
+      cancel_invoice: {
         Args: { p_invoice_id: string; p_reason: string };
         Returns: string;
-      };
-      review_invoice_edit_request: {
-        Args: {
-          p_request_id: string;
-          p_decision: Database["public"]["Enums"]["edit_request_status"];
-          p_admin_notes?: string | null;
-        };
-        Returns: undefined;
       };
       approve_leave_request: {
         Args: { p_leave_request_id: string };
@@ -954,7 +929,6 @@ export type Database = {
         | "adjustment";
       stock_location_type: "warehouse" | "rep";
       return_condition: "resalable" | "damaged" | "expired";
-      edit_request_status: "pending" | "approved" | "rejected";
       audit_action: "insert" | "update" | "delete";
       invoice_sale_channel: "cashier" | "online_store";
       customer_complaint_status: "open" | "in_progress" | "resolved";

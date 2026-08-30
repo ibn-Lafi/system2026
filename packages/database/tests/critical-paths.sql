@@ -190,15 +190,14 @@ select pg_temp.assert_true(
 
 -- ========== 6. منع ازدواج إعادة المخزون: لا إلغاء لفاتورة سبق إرجاعها ==========
 -- invoice1 أُرجع جزء منها بالقسم 5 (process_return). لو سمحنا بإلغائها كاملة
--- الآن، cancel_invoice_within_grace_period كانت سترجّع كامل الكمية الأصلية
--- (20) للمخزون فوق الكمية المُرجعة أصلًا (5) — ازدواج توثّق. يجب أن تُرفض
--- العملية.
+-- الآن، cancel_invoice كانت سترجّع كامل الكمية الأصلية (20) للمخزون فوق
+-- الكمية المُرجعة أصلًا (5) — ازدواج توثّق. يجب أن تُرفض العملية.
 -- ملاحظة: psql لا يستبدل متغيراته داخل $$...$$، لذلك p_invoice_id يُمرَّر
 -- كوسيط عادي لدالة pg_temp (يُستبدل بشكل صحيح باستدعاء SELECT مباشر).
 create function pg_temp.assert_cancel_is_rejected(p_invoice_id uuid, p_reason text)
 returns void language plpgsql as $$
 begin
-  perform public.cancel_invoice_within_grace_period(p_invoice_id, p_reason);
+  perform public.cancel_invoice(p_invoice_id, p_reason);
   raise exception 'FAILED: كان يجب رفض إلغاء فاتورة سبق تسجيل مرتجع عليها';
 exception
   when others then
@@ -221,7 +220,7 @@ select pg_temp.assert_true(
   'رصيد المخزون المشترك يجب ألا يتأثر بمحاولة الإلغاء المرفوضة (يبقى 345)'
 );
 
--- ========== 6.1 إلغاء فاتورة بفترة السماح بنجاح (فاتورة جديدة بلا مرتجعات) ==========
+-- ========== 6.1 إلغاء فاتورة فوري بنجاح (فاتورة جديدة بلا مرتجعات) ==========
 select public.create_invoice_with_stock_check(
   'e1111111-0000-0000-0000-000000000001',
   jsonb_build_array(jsonb_build_object(
@@ -231,7 +230,7 @@ select public.create_invoice_with_stock_check(
   )), 'cash'
 ) as invoice_id \gset invoice3_
 
-select public.cancel_invoice_within_grace_period(:'invoice3_invoice_id', 'خطأ إدخال');
+select public.cancel_invoice(:'invoice3_invoice_id', 'خطأ إدخال');
 
 select pg_temp.assert_true(
   (select status from public.invoices where id = :'invoice3_invoice_id') = 'cancelled',
