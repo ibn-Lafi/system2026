@@ -439,10 +439,6 @@ export type Database = {
           updated_by?: string | null;
         }
       >;
-      cashier_employees: Table<
-        { id: string; name: string; pin_hash: string; is_active: boolean; created_at: string; updated_at: string },
-        never // لا INSERT مباشر — عبر create_cashier_employee() فقط
-      >;
       audit_logs: Table<
         {
           id: string;
@@ -522,6 +518,8 @@ export type Database = {
           housing_allowance: number;
           other_allowances: number;
           is_active: boolean;
+          is_cashier: boolean;
+          cashier_pin_hash: string | null;
           created_at: string;
           updated_at: string;
         },
@@ -541,6 +539,7 @@ export type Database = {
           housing_allowance?: number;
           other_allowances?: number;
           is_active?: boolean;
+          is_cashier?: boolean;
         }
       >;
       attendance_records: Table<
@@ -802,16 +801,8 @@ export type Database = {
         Args: { p_phone: string; p_name: string | null };
         Returns: string;
       };
-      create_cashier_employee: {
-        Args: { p_name: string; p_pin: string };
-        Returns: string;
-      };
-      reset_cashier_employee_pin: {
+      set_employee_cashier_pin: {
         Args: { p_employee_id: string; p_pin: string };
-        Returns: undefined;
-      };
-      set_cashier_employee_active: {
-        Args: { p_employee_id: string; p_is_active: boolean };
         Returns: undefined;
       };
       verify_cashier_employee_pin: {

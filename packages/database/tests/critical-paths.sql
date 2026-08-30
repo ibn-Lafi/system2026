@@ -343,11 +343,15 @@ select pg_temp.assert_true(
   'find_or_create_customer_by_phone أنشأ أكثر من عميل لنفس رقم الجوال (كسر uniqueness)'
 );
 
-select public.create_cashier_employee('موظف كاشير 1', '1234') as employee1_id \gset
+insert into public.employees (full_name, hire_date, is_cashier)
+values ('موظف كاشير 1', current_date, true)
+returning id as employee1_id \gset
+
+select public.set_employee_cashier_pin(:'employee1_id', '1234');
 
 select pg_temp.assert_true(
-  (select is_active from public.cashier_employees where id = :'employee1_id') = true,
-  'create_cashier_employee لم ينشئ موظفًا نشطًا'
+  (select is_active and is_cashier from public.employees where id = :'employee1_id') = true,
+  'الموظف يجب أن يكون نشطًا وكاشيرًا بعد الإنشاء وتعيين الرمز'
 );
 select pg_temp.assert_true(
   public.verify_cashier_employee_pin(:'employee1_id'::uuid, '1234') = true,
@@ -388,7 +392,7 @@ select pg_temp.assert_true(
 do $$
 begin
   perform public.create_cashier_sale(
-    (select id from public.cashier_employees where name = 'موظف كاشير 1'),
+    (select id from public.employees where full_name = 'موظف كاشير 1' and is_cashier = true),
     (select id from public.customers where phone = '+966501111111'),
     jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 1000)),
     'cash'
@@ -401,12 +405,12 @@ exception
     end if;
 end $$;
 
-select public.set_cashier_employee_active((select id from public.cashier_employees where name = 'موظف كاشير 1'), false);
+update public.employees set is_active = false where full_name = 'موظف كاشير 1' and is_cashier = true;
 
 do $$
 begin
   perform public.create_cashier_sale(
-    (select id from public.cashier_employees where name = 'موظف كاشير 1'),
+    (select id from public.employees where full_name = 'موظف كاشير 1' and is_cashier = true),
     (select id from public.customers where phone = '+966501111111'),
     jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 1)),
     'cash'
@@ -493,8 +497,8 @@ select pg_temp.assert_true(
   'anon لا يجب أن يصل لجدول customers مباشرة إطلاقًا (RLS)'
 );
 select pg_temp.assert_true(
-  (select count(*) from public.cashier_employees) = 0,
-  'anon لا يجب أن يصل لجدول cashier_employees إطلاقًا (RLS)'
+  (select count(*) from public.employees) = 0,
+  'anon لا يجب أن يصل لجدول employees (بيانات كاشير/رواتب) إطلاقًا (RLS)'
 );
 select pg_temp.assert_true(
   (select count(*) from public.public_store_locations) = 1,

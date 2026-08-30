@@ -15,18 +15,6 @@ export const pinLoginSchema = z.object({
 });
 export type PinLoginInput = z.infer<typeof pinLoginSchema>;
 
-export const cashierEmployeeSchema = z.object({
-  name: z.string().min(1, "اسم الموظف مطلوب"),
-  pin: z.string().regex(/^[0-9]{4,6}$/, "رمز PIN يجب أن يكون بين 4 و6 أرقام"),
-});
-export type CashierEmployeeInput = z.infer<typeof cashierEmployeeSchema>;
-
-export const resetCashierEmployeePinSchema = z.object({
-  employeeId: z.string().uuid(),
-  pin: z.string().regex(/^[0-9]{4,6}$/, "رمز PIN يجب أن يكون بين 4 و6 أرقام"),
-});
-export type ResetCashierEmployeePinInput = z.infer<typeof resetCashierEmployeePinSchema>;
-
 export const posSaleItemSchema = z.object({
   productId: z.string().uuid(),
   quantity: z.number().positive("الكمية يجب أن تكون أكبر من صفر"),
