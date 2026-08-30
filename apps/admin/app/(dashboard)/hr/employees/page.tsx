@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Badge, Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Badge, Card, Input, ModalTrigger, PageHeader, Select } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -128,9 +128,7 @@ export default async function HrEmployeesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "الموظفون"]} />}
         title="الموظفون"
-        subtitle="بيانات الموظفين والرواتب الأساسية"
         actions={
           <ModalTrigger label="+ إضافة موظف" title="إضافة موظف جديد" size="lg">
             <ActionForm action={createEmployeeAction} className="space-y-3">

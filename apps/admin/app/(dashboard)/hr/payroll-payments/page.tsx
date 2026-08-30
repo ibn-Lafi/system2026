@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Card, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Card, ModalTrigger, PageHeader, Select } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -47,9 +47,7 @@ export default async function HrPayrollPaymentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "صرف الأجور"]} />}
         title="صرف الأجور"
-        subtitle="صرف بنود الرواتب المعتمدة — يقفل المسير تلقائيًا عند صرف كل بنوده"
       />
 
       <Card>

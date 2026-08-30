@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Badge, Button, Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Badge, Button, Card, Input, ModalTrigger, PageHeader, Select } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -63,9 +63,7 @@ export default async function HrAdvancesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "السلف والعهد"]} />}
         title="السلف والعهد"
-        subtitle="سلف الموظفين والعهد المسندة إليهم"
       />
 
       <Card>

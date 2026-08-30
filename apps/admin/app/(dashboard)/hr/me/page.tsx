@@ -1,4 +1,4 @@
-import { Badge, Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Badge, Card, Input, ModalTrigger, PageHeader, Select } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { createLeaveRequestAction } from "../leaves/actions";
@@ -51,7 +51,6 @@ export default async function HrMePage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "بياناتي"]} />}
           title="بياناتي"
         />
         <Card>
@@ -93,9 +92,7 @@ export default async function HrMePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "بياناتي"]} />}
         title="بياناتي"
-        subtitle={`${employee.full_name} — ${employee.job_title ?? "بدون مسمى وظيفي"}`}
         actions={
           <ModalTrigger label="+ طلب إجازة" title="تقديم طلب إجازة">
             <ActionForm action={createLeaveRequestAction} className="space-y-3">

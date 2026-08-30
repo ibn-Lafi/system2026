@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Card, Input, ModalTrigger, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Card, Input, ModalTrigger, PageHeader } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -21,9 +21,7 @@ export default async function HrShiftsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "الورديات والبصمة"]} />}
         title="الورديات والبصمة"
-        subtitle="إدارة الورديات — تسجيل الحضور يدوي بدل تكامل فعلي مع جهاز بصمة (لا يمكن الوصول لعتاد خارجي من تطبيق ويب)"
         actions={
           <ModalTrigger label="+ إضافة وردية" title="إضافة وردية">
             <ActionForm action={createShiftAction} className="space-y-3">

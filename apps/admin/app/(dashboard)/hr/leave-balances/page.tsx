@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Card, Input, ModalTrigger, PageHeader, Select } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../../components/action-form";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -50,9 +50,7 @@ export default async function HrLeaveBalancesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموارد البشرية", "أرصدة الإجازات"]} />}
         title="أرصدة الإجازات"
-        subtitle="الأيام المستحقة والمستخدمة لكل موظف بكل سنة"
         actions={
           <ModalTrigger label="+ تحديد رصيد مستحق" title="تحديد رصيد إجازة مستحق">
             <ActionForm action={adjustLeaveBalanceAction} className="space-y-3">

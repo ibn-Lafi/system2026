@@ -1,4 +1,4 @@
-import { Card, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Card, PageHeader } from "@system2026/ui";
 
 // لا توجد ميزات تصنيع حقيقية بالنظام بعد (لا أوامر إنتاج، لا قوائم مواد
 // خام BOM، لا استهلاك مخزون تلقائي عند التصنيع) — هذا القسم حاليًا مجرّد
@@ -7,9 +7,7 @@ export default function ManufacturingHubPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "التصنيع"]} />}
         title="التصنيع"
-        subtitle="لا توجد ميزات تصنيع مُفعّلة بالنظام بعد"
       />
       <Card>
         <p className="text-sm text-foreground/60">

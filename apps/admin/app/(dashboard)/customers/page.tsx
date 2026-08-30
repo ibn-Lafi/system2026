@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, Card, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Button, Card, PageHeader } from "@system2026/ui";
 import { createSupabaseServerClient } from "@system2026/database/server";
 
 type Customer = { id: string; name: string; phone: string | null; created_at: string };
@@ -15,9 +15,7 @@ export default async function CustomersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "العملاء"]} />}
         title="العملاء"
-        subtitle="عملاء المتجر الإلكتروني — تُدار بياناتهم لاحقًا عبر حسابات المتجر نفسها"
       />
 
       <Card>

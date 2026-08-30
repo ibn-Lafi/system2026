@@ -8,7 +8,6 @@ import {
   MetricCard,
   RangeChips,
   PageHeader,
-  Breadcrumb,
 } from "@system2026/ui";
 import { formatCurrency, computeDelta } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
@@ -65,9 +64,6 @@ export default async function SalesOverviewPage({
 }) {
   const role = await getCurrentUserRole();
   if (!hasPermission(role, "view_reports")) redirect("/");
-
-  const now = new Date();
-  const dateLabel = now.toLocaleDateString("ar-SA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   const supabase = createSupabaseServerClient();
   const range = { from: searchParams.from };
@@ -147,9 +143,7 @@ export default async function SalesOverviewPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "المبيعات", "نظرة عامة"]} />}
         title="نظرة عامة على المبيعات"
-        subtitle={dateLabel}
       />
 
       <Card>

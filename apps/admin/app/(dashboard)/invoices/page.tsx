@@ -7,7 +7,6 @@ import {
   ModalTrigger,
   RangeChips,
   PageHeader,
-  Breadcrumb,
   Select,
 } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
@@ -147,9 +146,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Inv
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الفواتير"]} />}
         title="الفواتير"
-        subtitle="كل فواتير البيع"
         actions={
           <>
             {canCollect && (customers?.length ?? 0) > 0 ? (

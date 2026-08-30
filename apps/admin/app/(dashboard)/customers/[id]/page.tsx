@@ -9,7 +9,6 @@ import {
   MetricCard,
   ModalTrigger,
   PageHeader,
-  Breadcrumb,
   RangeChips,
   Select,
 } from "@system2026/ui";
@@ -330,9 +329,7 @@ export default async function CustomerDetailPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "العملاء", customer.shop_name ?? customer.name]} />}
         title={customer.shop_name ?? customer.name}
-        subtitle="تقرير مفصّل عن مشتريات العميل وسجله الشرائي الكامل"
       />
 
       <div className="grid gap-4 sm:grid-cols-2">

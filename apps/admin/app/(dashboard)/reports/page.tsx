@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Card, DateRangePicker, PageHeader, Breadcrumb, Select } from "@system2026/ui";
+import { Card, DateRangePicker, PageHeader, Select } from "@system2026/ui";
 import { getCurrentUserRole } from "../../../lib/get-current-role";
 import { hasPermission } from "../../../lib/permissions";
 
@@ -22,9 +22,7 @@ export default async function ReportsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "المبيعات", "التقارير"]} />}
         title="التقارير"
-        subtitle="اختر نوع التقرير والفترة، ثم نزّل الملف (CSV يفتح مباشرة بإكسل)"
       />
 
       <Card>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, Card, Input, ModalTrigger, PageHeader, Breadcrumb, Select, cn } from "@system2026/ui";
+import { Button, Card, Input, ModalTrigger, PageHeader, Select, cn } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { ActionForm } from "../../../components/action-form";
@@ -111,9 +111,7 @@ export default async function SuppliersPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموردين"]} />}
         title="الموردين"
-        subtitle="متابعة الموردين وفواتير الشراء ومستحقاتهم"
         actions={
           hasPermission(role, "manage_purchases") ? (
             <ModalTrigger label="+ إضافة مورد" title="إضافة مورد">

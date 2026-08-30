@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, Button, HorizontalBarChart, MetricCard, LineChart, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Card, Button, HorizontalBarChart, MetricCard, LineChart, PageHeader } from "@system2026/ui";
 import { computeDelta } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -88,9 +88,7 @@ export default async function StoreLeadsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "المتجر الإلكتروني", "بيانات الزوار"]} />}
         title="بيانات الزوار المستلمة"
-        subtitle="الطلبات المرسلة من صفحة الهبوط بالمتجر العام"
         actions={
           <Link href="/store">
             <Button variant="outline">رجوع لإعدادات المتجر</Button>

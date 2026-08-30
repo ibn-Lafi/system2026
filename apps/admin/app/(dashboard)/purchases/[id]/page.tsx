@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Card, ModalTrigger, PageHeader, Breadcrumb } from "@system2026/ui";
+import { Card, ModalTrigger, PageHeader } from "@system2026/ui";
 import { formatCurrency } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
 import { getCurrentUserRole } from "../../../../lib/get-current-role";
@@ -91,9 +91,7 @@ export default async function PurchaseInvoiceDetailPage({ params }: { params: { 
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumb={<Breadcrumb items={["لوحة التحكم", "الموردين", supplier?.name ?? "—", `فاتورة #${invoice.invoice_number}`]} />}
         title={`فاتورة شراء #${invoice.invoice_number}`}
-        subtitle={supplier ? `المورد: ${supplier.name}` : undefined}
         actions={
           canManage && !isSettled ? (
             <ModalTrigger label="تسجيل دفعة" title="تسجيل دفعة" variant="outline">
