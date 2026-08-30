@@ -18,6 +18,10 @@ export type ModuleDef = {
   // /purchases/[id]) تنتمي لهذي الوحدة لأغراض تحديد الوحدة الحالية فقط —
   // لا تُعرض كعنصر شريط جانبي مستقل.
   extraPathPrefixes?: string[];
+  // وحدة بلا شريط جانبي إطلاقًا — مربّع الرئيسية يفتح صفحتها مباشرة بعرض
+  // كامل (مثل التقارير: صفحة توليد/تنزيل ملف واحدة فقط، لا تحتاج تنقّلًا
+  // فرعيًا).
+  noSidebar?: boolean;
 };
 
 export const MODULES: ModuleDef[] = [
@@ -41,7 +45,6 @@ export const MODULES: ModuleDef[] = [
       { href: "/customers", label: "العملاء", icon: "store", permissions: ["manage_customers"] },
       { href: "/invoices", label: "الفواتير", icon: "invoice", permissions: ["manage_collections", "manage_returns"] },
       { href: "/returns", label: "المرتجعات", icon: "return", permissions: ["manage_returns"] },
-      { href: "/reports", label: "التقارير", icon: "chart", permissions: ["view_reports"] },
     ],
   },
   {
@@ -93,6 +96,14 @@ export const MODULES: ModuleDef[] = [
     description: "لا توجد ميزات تصنيع مُفعّلة بالنظام بعد",
     icon: "box",
     pages: [{ href: "/manufacturing", label: "نظرة عامة", icon: "box" }],
+  },
+  {
+    key: "reports",
+    label: "التقارير",
+    description: "توليد وتنزيل ملف تقرير (مبيعات، خسائر، مستحقات...)",
+    icon: "chart",
+    pages: [{ href: "/reports", label: "التقارير", icon: "chart", permissions: ["view_reports"] }],
+    noSidebar: true,
   },
   {
     key: "settings",

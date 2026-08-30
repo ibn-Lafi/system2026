@@ -1,24 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { cn } from "@system2026/ui";
 import { AdminNav, type NavItem } from "./admin-nav";
-import { CollapseIcon, PersonIcon } from "./icons";
-import { STAFF_ROLE_LABELS, type StaffRole } from "../lib/permissions";
+import { CollapseIcon } from "./icons";
 
 const STORAGE_KEY = "admin-sidebar-collapsed";
 
 export function AdminSidebar({
   navItems,
   settingsItems,
-  profileName,
-  profileRole,
 }: {
   navItems: NavItem[];
   settingsItems: NavItem[];
-  profileName?: string;
-  profileRole: StaffRole;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -69,24 +63,6 @@ export function AdminSidebar({
           </>
         ) : null}
       </div>
-
-      <Link
-        href="/account"
-        className={cn(
-          "mt-3 flex items-center gap-2.5 rounded-xl bg-muted p-2.5 transition-colors hover:bg-muted/70",
-          collapsed && "justify-center",
-        )}
-      >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <PersonIcon className="h-[18px] w-[18px]" />
-        </div>
-        {collapsed ? null : (
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{profileName}</p>
-            <p className="text-xs text-muted-foreground">{STAFF_ROLE_LABELS[profileRole]}</p>
-          </div>
-        )}
-      </Link>
     </aside>
   );
 }
