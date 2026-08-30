@@ -10,13 +10,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.111.0",
     "@system2026/database": "workspace:*",
     "@system2026/ui": "workspace:*",
     "@system2026/utils": "workspace:*",
     "@system2026/validation": "workspace:*",
     "next": "^14.2.5",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@system2026/config": "workspace:*",

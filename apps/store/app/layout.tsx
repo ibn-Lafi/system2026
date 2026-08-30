@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Footer } from "../components/footer";
+import { CartBar } from "../components/cart-bar";
+import { CartProvider } from "../lib/cart-context";
 import { getStoreSettings } from "../lib/get-store-settings";
 import "./globals.css";
 
@@ -36,8 +38,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </head>
       ) : null}
       <body>
-        {children}
-        {settings.show_landing_page ? null : <Footer settings={settings} />}
+        <CartProvider>
+          {children}
+          {settings.show_landing_page ? null : <Footer settings={settings} />}
+          {settings.show_landing_page ? null : <CartBar />}
+        </CartProvider>
       </body>
     </html>
   );

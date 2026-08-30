@@ -439,6 +439,7 @@ export type Database = {
           company_address: string;
           invoice_edit_grace_period_minutes: number;
           expiry_alert_days_threshold: number;
+          loyalty_riyals_per_point: number;
           updated_at: string;
           updated_by: string | null;
         },
@@ -450,8 +451,13 @@ export type Database = {
           company_address?: string;
           invoice_edit_grace_period_minutes?: number;
           expiry_alert_days_threshold?: number;
+          loyalty_riyals_per_point?: number;
           updated_by?: string | null;
         }
+      >;
+      cashier_terminals: Table<
+        { id: string; name: string; pin_hash: string; is_active: boolean; created_at: string; updated_at: string },
+        never // لا INSERT مباشر — عبر create_cashier_terminal() فقط
       >;
       audit_logs: Table<
         {
@@ -510,6 +516,236 @@ export type Database = {
         },
         { id?: string; phone_number: string; desired_store: string },
         never // لا UPDATE/DELETE — للمراجعة فقط
+      >;
+      shifts: Table<
+        { id: string; name: string; start_time: string; end_time: string; created_at: string; updated_at: string },
+        { id?: string; name: string; start_time: string; end_time: string }
+      >;
+      employees: Table<
+        {
+          id: string;
+          profile_id: string | null;
+          full_name: string;
+          national_id: string | null;
+          phone: string | null;
+          email: string | null;
+          job_title: string | null;
+          department: string | null;
+          hire_date: string;
+          termination_date: string | null;
+          shift_id: string | null;
+          basic_salary: number;
+          housing_allowance: number;
+          other_allowances: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        },
+        {
+          id?: string;
+          profile_id?: string | null;
+          full_name: string;
+          national_id?: string | null;
+          phone?: string | null;
+          email?: string | null;
+          job_title?: string | null;
+          department?: string | null;
+          hire_date: string;
+          termination_date?: string | null;
+          shift_id?: string | null;
+          basic_salary?: number;
+          housing_allowance?: number;
+          other_allowances?: number;
+          is_active?: boolean;
+        }
+      >;
+      attendance_records: Table<
+        {
+          id: string;
+          employee_id: string;
+          work_date: string;
+          check_in: string | null;
+          check_out: string | null;
+          status: Database["public"]["Enums"]["hr_attendance_status"];
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        },
+        {
+          id?: string;
+          employee_id: string;
+          work_date: string;
+          check_in?: string | null;
+          check_out?: string | null;
+          status?: Database["public"]["Enums"]["hr_attendance_status"];
+          notes?: string | null;
+        }
+      >;
+      employee_leave_balances: Table<
+        {
+          id: string;
+          employee_id: string;
+          leave_type: Database["public"]["Enums"]["hr_leave_type"];
+          year: number;
+          entitled_days: number;
+          used_days: number;
+          created_at: string;
+          updated_at: string;
+        },
+        {
+          id?: string;
+          employee_id: string;
+          leave_type: Database["public"]["Enums"]["hr_leave_type"];
+          year: number;
+          entitled_days?: number;
+          used_days?: number;
+        }
+      >;
+      leave_requests: Table<
+        {
+          id: string;
+          employee_id: string;
+          leave_type: Database["public"]["Enums"]["hr_leave_type"];
+          start_date: string;
+          end_date: string;
+          days_count: number;
+          reason: string | null;
+          status: Database["public"]["Enums"]["hr_leave_status"];
+          reviewed_by: string | null;
+          created_at: string;
+          updated_at: string;
+        },
+        {
+          id?: string;
+          employee_id: string;
+          leave_type: Database["public"]["Enums"]["hr_leave_type"];
+          start_date: string;
+          end_date: string;
+          days_count: number;
+          reason?: string | null;
+        }
+      >;
+      employee_advances: Table<
+        {
+          id: string;
+          employee_id: string;
+          amount: number;
+          reason: string | null;
+          request_date: string;
+          monthly_deduction_amount: number;
+          remaining_balance: number;
+          status: Database["public"]["Enums"]["hr_advance_status"];
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        },
+        {
+          id?: string;
+          employee_id: string;
+          amount: number;
+          reason?: string | null;
+          request_date?: string;
+          monthly_deduction_amount?: number;
+          remaining_balance: number;
+          status?: Database["public"]["Enums"]["hr_advance_status"];
+          created_by?: string | null;
+        }
+      >;
+      employee_custody_items: Table<
+        {
+          id: string;
+          employee_id: string;
+          item_name: string;
+          description: string | null;
+          assigned_date: string;
+          returned_date: string | null;
+          status: Database["public"]["Enums"]["hr_custody_status"];
+          created_at: string;
+          updated_at: string;
+        },
+        {
+          id?: string;
+          employee_id: string;
+          item_name: string;
+          description?: string | null;
+          assigned_date?: string;
+          returned_date?: string | null;
+          status?: Database["public"]["Enums"]["hr_custody_status"];
+        }
+      >;
+      payroll_runs: Table<
+        {
+          id: string;
+          period_month: number;
+          period_year: number;
+          status: Database["public"]["Enums"]["hr_payroll_run_status"];
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        },
+        never // لا INSERT مباشر — عبر generate_payroll_run() فقط
+      >;
+      payroll_items: Table<
+        {
+          id: string;
+          payroll_run_id: string;
+          employee_id: string;
+          basic_salary: number;
+          allowances: number;
+          deductions: number;
+          net_salary: number;
+          is_paid: boolean;
+          created_at: string;
+          updated_at: string;
+        },
+        never // لا INSERT مباشر — عبر generate_payroll_run() فقط
+      >;
+      wage_payments: Table<
+        {
+          id: string;
+          payroll_item_id: string;
+          payment_date: string;
+          method: Database["public"]["Enums"]["settlement_method"];
+          amount: number;
+          created_by: string | null;
+          created_at: string;
+        },
+        never // لا INSERT مباشر — عبر pay_payroll_item() فقط
+      >;
+      end_of_service_settlements: Table<
+        {
+          id: string;
+          employee_id: string;
+          termination_date: string;
+          years_of_service: number;
+          gratuity_amount: number;
+          calculation_notes: string | null;
+          created_by: string | null;
+          created_at: string;
+        },
+        never // لا INSERT مباشر — عبر calculate_end_of_service() فقط
+      >;
+      performance_appraisals: Table<
+        {
+          id: string;
+          employee_id: string;
+          appraisal_period: string;
+          score: number;
+          strengths: string | null;
+          areas_for_improvement: string | null;
+          reviewed_by: string | null;
+          created_at: string;
+          updated_at: string;
+        },
+        {
+          id?: string;
+          employee_id: string;
+          appraisal_period: string;
+          score: number;
+          strengths?: string | null;
+          areas_for_improvement?: string | null;
+          reviewed_by?: string | null;
+        }
       >;
       store_sections: Table<
         {
@@ -578,6 +814,39 @@ export type Database = {
       };
     };
     Functions: {
+      find_or_create_customer_by_phone: {
+        Args: { p_phone: string; p_name: string | null };
+        Returns: string;
+      };
+      create_cashier_terminal: {
+        Args: { p_name: string; p_pin: string };
+        Returns: string;
+      };
+      reset_cashier_terminal_pin: {
+        Args: { p_terminal_id: string; p_pin: string };
+        Returns: undefined;
+      };
+      set_cashier_terminal_active: {
+        Args: { p_terminal_id: string; p_is_active: boolean };
+        Returns: undefined;
+      };
+      verify_cashier_terminal_pin: {
+        Args: { p_pin: string };
+        Returns: string | null;
+      };
+      create_cashier_sale: {
+        Args: {
+          p_terminal_id: string;
+          p_customer_id: string;
+          p_items: Json;
+          p_payment_method: Database["public"]["Enums"]["invoice_payment_method"];
+        };
+        Returns: string;
+      };
+      create_online_store_order: {
+        Args: { p_customer_id: string; p_items: Json };
+        Returns: string;
+      };
       create_invoice_with_stock_check: {
         Args: {
           p_customer_id: string;
@@ -643,6 +912,30 @@ export type Database = {
         };
         Returns: undefined;
       };
+      approve_leave_request: {
+        Args: { p_leave_request_id: string };
+        Returns: undefined;
+      };
+      reject_leave_request: {
+        Args: { p_leave_request_id: string };
+        Returns: undefined;
+      };
+      generate_payroll_run: {
+        Args: { p_period_month: number; p_period_year: number };
+        Returns: string;
+      };
+      update_payroll_item_deductions: {
+        Args: { p_payroll_item_id: string; p_deductions: number };
+        Returns: undefined;
+      };
+      pay_payroll_item: {
+        Args: { p_payroll_item_id: string; p_method: Database["public"]["Enums"]["settlement_method"] };
+        Returns: undefined;
+      };
+      calculate_end_of_service: {
+        Args: { p_employee_id: string; p_termination_date: string };
+        Returns: string;
+      };
     };
     Enums: {
       user_role: "admin" | "accountant" | "rep" | "marketing" | "sales" | "production" | "supervisor";
@@ -664,6 +957,12 @@ export type Database = {
       audit_action: "insert" | "update" | "delete";
       invoice_sale_channel: "cashier" | "online_store";
       customer_complaint_status: "open" | "in_progress" | "resolved";
+      hr_leave_type: "annual" | "sick" | "unpaid" | "other";
+      hr_leave_status: "pending" | "approved" | "rejected";
+      hr_attendance_status: "present" | "absent" | "late" | "on_leave";
+      hr_advance_status: "pending" | "approved" | "repaid";
+      hr_custody_status: "assigned" | "returned";
+      hr_payroll_run_status: "draft" | "paid";
     };
   };
 };

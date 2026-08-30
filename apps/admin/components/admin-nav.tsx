@@ -19,6 +19,7 @@ import {
   CreditCardIcon,
   ChartIcon,
   SettingsIcon,
+  HrIcon,
 } from "./icons";
 
 export const ICON_MAP = {
@@ -37,6 +38,7 @@ export const ICON_MAP = {
   creditCard: CreditCardIcon,
   chart: ChartIcon,
   settings: SettingsIcon,
+  hr: HrIcon,
 } as const;
 
 export type IconName = keyof typeof ICON_MAP;

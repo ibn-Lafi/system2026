@@ -185,3 +185,14 @@ export function PersonIcon(p: IconProps) {
     </Icon>
   );
 }
+
+export function HrIcon(p: IconProps) {
+  return (
+    <Icon {...p}>
+      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <circle cx="9.5" cy="10.5" r="2" />
+      <path d="M6 16c.7-1.8 2-2.7 3.5-2.7s2.8.9 3.5 2.7" />
+      <path d="M14.5 9h4M14.5 12.5h4" />
+    </Icon>
+  );
+}

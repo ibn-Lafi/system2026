@@ -6,6 +6,7 @@ import {
   updateCompanyInfoSchema,
   updateInvoiceGracePeriodSchema,
   updateExpiryAlertThresholdSchema,
+  updateLoyaltyRatioSchema,
 } from "@system2026/validation";
 import type { ActionState } from "../../../components/action-form";
 
@@ -63,6 +64,32 @@ export async function updateInvoiceGracePeriodAction(
     .from("system_settings")
     .update({
       invoice_edit_grace_period_minutes: parsed.data.invoiceEditGracePeriodMinutes,
+      updated_by: user?.id,
+    })
+    .eq("id", 1);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/settings");
+  return { success: true };
+}
+
+export async function updateLoyaltyRatioAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = updateLoyaltyRatioSchema.safeParse({
+    loyaltyRiyalsPerPoint: Number(formData.get("loyaltyRiyalsPerPoint")),
+  });
+
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
+
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase
+    .from("system_settings")
+    .update({
+      loyalty_riyals_per_point: parsed.data.loyaltyRiyalsPerPoint,
       updated_by: user?.id,
     })
     .eq("id", 1);
