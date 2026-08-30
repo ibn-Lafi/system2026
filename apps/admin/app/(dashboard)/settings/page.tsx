@@ -9,6 +9,7 @@ import {
   updateCompanyInfoAction,
   updateInvoiceGracePeriodAction,
   updateExpiryAlertThresholdAction,
+  updateLoyaltyRatioAction,
 } from "./actions";
 
 type Settings = {
@@ -18,6 +19,7 @@ type Settings = {
   company_address: string;
   invoice_edit_grace_period_minutes: number;
   expiry_alert_days_threshold: number;
+  loyalty_riyals_per_point: number;
 };
 
 export default async function SettingsPage() {
@@ -28,10 +30,10 @@ export default async function SettingsPage() {
   const { data: settings } = await supabase
     .from("system_settings")
     .select<
-      "company_name, vat_registration_number, commercial_registration_number, company_address, invoice_edit_grace_period_minutes, expiry_alert_days_threshold",
+      "company_name, vat_registration_number, commercial_registration_number, company_address, invoice_edit_grace_period_minutes, expiry_alert_days_threshold, loyalty_riyals_per_point",
       Settings
     >(
-      "company_name, vat_registration_number, commercial_registration_number, company_address, invoice_edit_grace_period_minutes, expiry_alert_days_threshold",
+      "company_name, vat_registration_number, commercial_registration_number, company_address, invoice_edit_grace_period_minutes, expiry_alert_days_threshold, loyalty_riyals_per_point",
     )
     .eq("id", 1)
     .single();
@@ -145,6 +147,45 @@ export default async function SettingsPage() {
                 </div>
               </ActionForm>
             </ModalTrigger>
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="font-semibold">نقاط الولاء</h2>
+          <p className="mt-1 text-sm text-foreground/60">
+            تُحتسب تلقائيًا عند كل فاتورة كاشير أو طلب متجر إلكتروني — المعدّل الحالي:{" "}
+            <span className="font-semibold text-foreground">
+              نقطة واحدة لكل {settings?.loyalty_riyals_per_point ?? 10} ريال
+            </span>
+          </p>
+          <div className="mt-4">
+            <ModalTrigger label="تعديل" title="معدّل نقاط الولاء" variant="outline">
+              <ActionForm action={updateLoyaltyRatioAction} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm">ريال لكل نقطة واحدة</label>
+                  <Input
+                    name="loyaltyRiyalsPerPoint"
+                    type="number"
+                    step="0.5"
+                    min={0.5}
+                    defaultValue={settings?.loyalty_riyals_per_point ?? 10}
+                    required
+                  />
+                </div>
+              </ActionForm>
+            </ModalTrigger>
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="font-semibold">حاويات الكاشير</h2>
+          <p className="mt-1 text-sm text-foreground/60">
+            إدارة أجهزة نقطة البيع (الاسم ورمز PIN) المستخدمة بتطبيق الكاشير المستقل
+          </p>
+          <div className="mt-4">
+            <Link href="/settings/cashier-terminals">
+              <Button variant="outline">فتح صفحة حاويات الكاشير</Button>
+            </Link>
           </div>
         </Card>
       </div>

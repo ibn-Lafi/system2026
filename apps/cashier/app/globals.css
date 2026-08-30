@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 9%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 42%;
+  --border: 0 0% 89%;
+  --ring: 0 0% 9%;
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 100%;
+  --destructive: 0 0% 9%;
+  --destructive-foreground: 0 0% 100%;
+  --radius: 1rem;
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+
+/* طباعة إيصال حراري ضيق (80مم) — تُظهر #receipt-print-root فقط، بعرض
+   الورق الفعلي لطابعات نقاط البيع الحرارية، بغض النظر عن واجهة الكاشير
+   المحيطة (شبكة المنتجات/السلة). */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #receipt-print-root,
+  #receipt-print-root * {
+    visibility: visible;
+  }
+
+  #receipt-print-root {
+    position: absolute;
+    inset: 0;
+    width: 80mm;
+  }
+}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatCurrency } from "@system2026/utils";
 import { getStoreProduct } from "../../../lib/get-catalog";
 import { WaveDivider } from "../../../components/wave-divider";
+import { AddToCartControl } from "../../../components/add-to-cart-control";
 
 function PlaceholderIcon() {
   return (
@@ -80,6 +81,13 @@ export default async function ProductPage({ params }: { params: { id: string } }
           <span className="text-[28px] font-black">{formatCurrency(product.price)}</span>
           <span className="text-[13.5px] text-muted-foreground">/ {product.base_unit_name}</span>
         </div>
+
+        <AddToCartControl
+          productId={product.id}
+          name={product.name}
+          price={product.price}
+          imageUrl={product.image_url}
+        />
       </div>
     </main>
   );

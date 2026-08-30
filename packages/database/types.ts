@@ -439,6 +439,7 @@ export type Database = {
           company_address: string;
           invoice_edit_grace_period_minutes: number;
           expiry_alert_days_threshold: number;
+          loyalty_riyals_per_point: number;
           updated_at: string;
           updated_by: string | null;
         },
@@ -450,8 +451,13 @@ export type Database = {
           company_address?: string;
           invoice_edit_grace_period_minutes?: number;
           expiry_alert_days_threshold?: number;
+          loyalty_riyals_per_point?: number;
           updated_by?: string | null;
         }
+      >;
+      cashier_terminals: Table<
+        { id: string; name: string; pin_hash: string; is_active: boolean; created_at: string; updated_at: string },
+        never // لا INSERT مباشر — عبر create_cashier_terminal() فقط
       >;
       audit_logs: Table<
         {
@@ -808,6 +814,39 @@ export type Database = {
       };
     };
     Functions: {
+      find_or_create_customer_by_phone: {
+        Args: { p_phone: string; p_name: string | null };
+        Returns: string;
+      };
+      create_cashier_terminal: {
+        Args: { p_name: string; p_pin: string };
+        Returns: string;
+      };
+      reset_cashier_terminal_pin: {
+        Args: { p_terminal_id: string; p_pin: string };
+        Returns: undefined;
+      };
+      set_cashier_terminal_active: {
+        Args: { p_terminal_id: string; p_is_active: boolean };
+        Returns: undefined;
+      };
+      verify_cashier_terminal_pin: {
+        Args: { p_pin: string };
+        Returns: string | null;
+      };
+      create_cashier_sale: {
+        Args: {
+          p_terminal_id: string;
+          p_customer_id: string;
+          p_items: Json;
+          p_payment_method: Database["public"]["Enums"]["invoice_payment_method"];
+        };
+        Returns: string;
+      };
+      create_online_store_order: {
+        Args: { p_customer_id: string; p_items: Json };
+        Returns: string;
+      };
       create_invoice_with_stock_check: {
         Args: {
           p_customer_id: string;

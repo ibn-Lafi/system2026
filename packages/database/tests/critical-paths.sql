@@ -321,7 +321,156 @@ exception
     -- الاستثناء المتوقع من الدالة نفسها — هذا صحيح
 end $$;
 
--- ========== 8. RLS لكل دور (CLAUDE.md §4-5) ==========
+-- ========== 8. هوية عميل موحّدة + كاشير + طلب متجر إلكتروني ==========
+reset role;
+set request.jwt.uid = '11111111-1111-1111-1111-111111111111';
+set request.jwt.claims = '{"role":"authenticated","app_metadata":{"role":"admin"}}';
+
+insert into public.products (id, name, price, category_id, base_unit_id, visible_in_store)
+values ('b2222222-0000-0000-0000-000000000001', 'منتج كاشير تجريبي', 11.50,
+        'c1111111-0000-0000-0000-000000000001', 'a1111111-0000-0000-0000-000000000001', true);
+insert into public.warehouse_stock (product_id, quantity_available)
+values ('b2222222-0000-0000-0000-000000000001', 50);
+
+select public.find_or_create_customer_by_phone('+966501111111', 'زبون كاشير') as cust1_id \gset
+select public.find_or_create_customer_by_phone('+966501111111', 'اسم مختلف يجب تجاهله') as cust1_id_again \gset
+
+select pg_temp.assert_true(
+  :'cust1_id' = :'cust1_id_again',
+  'find_or_create_customer_by_phone لم يرجّع نفس العميل لنفس رقم الجوال'
+);
+select pg_temp.assert_true(
+  (select count(*) from public.customers where phone = '+966501111111') = 1,
+  'find_or_create_customer_by_phone أنشأ أكثر من عميل لنفس رقم الجوال (كسر uniqueness)'
+);
+
+select public.create_cashier_terminal('كاشير 1', '1234') as terminal1_id \gset
+
+select pg_temp.assert_true(
+  (select is_active from public.cashier_terminals where id = :'terminal1_id') = true,
+  'create_cashier_terminal لم ينشئ حاوية نشطة'
+);
+select pg_temp.assert_true(
+  public.verify_cashier_terminal_pin('1234') = :'terminal1_id'::uuid,
+  'verify_cashier_terminal_pin لم يتحقق من PIN الصحيح'
+);
+select pg_temp.assert_true(
+  public.verify_cashier_terminal_pin('9999') is null,
+  'verify_cashier_terminal_pin يجب أن يرجّع null لـPIN خاطئ'
+);
+
+select public.create_cashier_sale(
+  :'terminal1_id', :'cust1_id',
+  jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 3)),
+  'cash'
+) as cashier_sale_id \gset
+
+select pg_temp.assert_true(
+  (select quantity_available from public.warehouse_stock where product_id = 'b2222222-0000-0000-0000-000000000001') = 47,
+  'create_cashier_sale لم يخصم المخزون بشكل صحيح'
+);
+select pg_temp.assert_true(
+  (select sale_channel from public.invoices where id = :'cashier_sale_id') = 'cashier',
+  'create_cashier_sale لم يسجّل sale_channel=cashier'
+);
+select pg_temp.assert_true(
+  (select total_amount from public.invoices where id = :'cashier_sale_id') = 34.50,
+  'إجمالي فاتورة الكاشير غير صحيح (متوقع 34.50 لـ3 قطع بسعر 11.50 شامل الضريبة)'
+);
+select pg_temp.assert_true(
+  (select loyalty_points from public.customers where id = :'cust1_id') = 3,
+  'create_cashier_sale لم يحتسب نقاط الولاء تلقائيًا بشكل صحيح (متوقع 3 نقاط لإجمالي 34.50 بمعدل 10 ريال/نقطة)'
+);
+
+do $$
+begin
+  perform public.create_cashier_sale(
+    (select id from public.cashier_terminals where name = 'كاشير 1'),
+    (select id from public.customers where phone = '+966501111111'),
+    jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 1000)),
+    'cash'
+  );
+  raise exception 'FAILED: كان يجب رفض بيع كمية أكبر من المتاح بالكاشير';
+exception
+  when others then
+    if sqlerrm = 'FAILED: كان يجب رفض بيع كمية أكبر من المتاح بالكاشير' then
+      raise;
+    end if;
+end $$;
+
+select public.set_cashier_terminal_active((select id from public.cashier_terminals where name = 'كاشير 1'), false);
+
+do $$
+begin
+  perform public.create_cashier_sale(
+    (select id from public.cashier_terminals where name = 'كاشير 1'),
+    (select id from public.customers where phone = '+966501111111'),
+    jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 1)),
+    'cash'
+  );
+  raise exception 'FAILED: كان يجب رفض البيع من حاوية كاشير معطّلة';
+exception
+  when others then
+    if sqlerrm = 'FAILED: كان يجب رفض البيع من حاوية كاشير معطّلة' then
+      raise;
+    end if;
+end $$;
+
+select public.find_or_create_customer_by_phone('+966502222222', 'زبون متجر') as store_cust_id \gset
+
+select public.create_online_store_order(
+  :'store_cust_id',
+  jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 2))
+) as store_order_id \gset
+
+select pg_temp.assert_true(
+  (select sale_channel from public.invoices where id = :'store_order_id') = 'online_store',
+  'create_online_store_order لم يسجّل sale_channel=online_store'
+);
+select pg_temp.assert_true(
+  (select status from public.invoices where id = :'store_order_id') = 'unpaid',
+  'طلب المتجر يجب أن يبقى غير مسدد حتى التحصيل الفعلي (دفع عند الاستلام)'
+);
+select pg_temp.assert_true(
+  (select quantity_available from public.warehouse_stock where product_id = 'b2222222-0000-0000-0000-000000000001') = 45,
+  'create_online_store_order لم يخصم المخزون بشكل صحيح'
+);
+
+insert into public.products (id, name, price, category_id, base_unit_id, visible_in_store)
+values ('b2222222-0000-0000-0000-000000000002', 'منتج غير معروض بالمتجر', 20.00,
+        'c1111111-0000-0000-0000-000000000001', 'a1111111-0000-0000-0000-000000000001', false);
+insert into public.warehouse_stock (product_id, quantity_available)
+values ('b2222222-0000-0000-0000-000000000002', 10);
+
+do $$
+begin
+  perform public.create_online_store_order(
+    (select id from public.customers where phone = '+966502222222'),
+    jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000002', 'quantity', 1))
+  );
+  raise exception 'FAILED: كان يجب رفض طلب منتج غير معروض بالمتجر';
+exception
+  when others then
+    if sqlerrm = 'FAILED: كان يجب رفض طلب منتج غير معروض بالمتجر' then
+      raise;
+    end if;
+end $$;
+
+do $$
+begin
+  perform public.create_online_store_order(
+    (select id from public.customers where phone = '+966502222222'),
+    jsonb_build_array(jsonb_build_object('product_id', 'b2222222-0000-0000-0000-000000000001', 'quantity', 9999))
+  );
+  raise exception 'FAILED: كان يجب رفض طلب متجر بكمية أكبر من المتاح';
+exception
+  when others then
+    if sqlerrm = 'FAILED: كان يجب رفض طلب متجر بكمية أكبر من المتاح' then
+      raise;
+    end if;
+end $$;
+
+-- ========== 9. RLS لكل دور (CLAUDE.md §4-5) ==========
 reset role;
 set request.jwt.uid = '11111111-1111-1111-1111-111111111111';
 set request.jwt.claims = '{"role":"authenticated","app_metadata":{"role":"admin"}}';
@@ -341,12 +490,16 @@ select pg_temp.assert_true(
   'anon لا يجب أن يصل لجدول customers مباشرة إطلاقًا (RLS)'
 );
 select pg_temp.assert_true(
+  (select count(*) from public.cashier_terminals) = 0,
+  'anon لا يجب أن يصل لجدول cashier_terminals إطلاقًا (RLS)'
+);
+select pg_temp.assert_true(
   (select count(*) from public.public_store_locations) = 1,
   'anon يجب أن يرى نقطة البيع الظاهرة عبر public_store_locations'
 );
 select pg_temp.assert_true(
-  (select count(*) from public.public_products) = 1,
-  'anon يجب أن يرى المنتج الظاهر بالمتجر عبر public_products'
+  (select count(*) from public.public_products) = 2,
+  'anon يجب أن يرى المنتجات الظاهرة بالمتجر عبر public_products (الأصلي + منتج الكاشير التجريبي)'
 );
 
 reset role;
