@@ -16,7 +16,7 @@ const PAYMENT_METHODS = [
   { value: "credit", label: "آجل (دين على العميل)" },
 ] as const;
 
-export function PosScreen({ products, terminalName }: { products: PosProduct[]; terminalName: string }) {
+export function PosScreen({ products, employeeName }: { products: PosProduct[]; employeeName: string }) {
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [phone, setPhone] = useState("");
@@ -128,7 +128,7 @@ export function PosScreen({ products, terminalName }: { products: PosProduct[]; 
     <div className="flex min-h-screen flex-col lg:flex-row">
       <div className="flex-1 space-y-4 p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold">{terminalName}</h1>
+          <h1 className="text-lg font-bold">{employeeName}</h1>
           <form action={logoutAction}>
             <Button type="submit" variant="outline" size="sm">
               تسجيل خروج

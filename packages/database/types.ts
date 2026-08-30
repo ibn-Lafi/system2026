@@ -341,6 +341,7 @@ export type Database = {
           branch_id: string | null;
           notes: string | null;
           sale_channel: Database["public"]["Enums"]["invoice_sale_channel"];
+          cashier_employee_id: string | null;
           created_at: string;
           updated_at: string;
         },
@@ -455,9 +456,9 @@ export type Database = {
           updated_by?: string | null;
         }
       >;
-      cashier_terminals: Table<
+      cashier_employees: Table<
         { id: string; name: string; pin_hash: string; is_active: boolean; created_at: string; updated_at: string },
-        never // لا INSERT مباشر — عبر create_cashier_terminal() فقط
+        never // لا INSERT مباشر — عبر create_cashier_employee() فقط
       >;
       audit_logs: Table<
         {
@@ -818,25 +819,25 @@ export type Database = {
         Args: { p_phone: string; p_name: string | null };
         Returns: string;
       };
-      create_cashier_terminal: {
+      create_cashier_employee: {
         Args: { p_name: string; p_pin: string };
         Returns: string;
       };
-      reset_cashier_terminal_pin: {
-        Args: { p_terminal_id: string; p_pin: string };
+      reset_cashier_employee_pin: {
+        Args: { p_employee_id: string; p_pin: string };
         Returns: undefined;
       };
-      set_cashier_terminal_active: {
-        Args: { p_terminal_id: string; p_is_active: boolean };
+      set_cashier_employee_active: {
+        Args: { p_employee_id: string; p_is_active: boolean };
         Returns: undefined;
       };
-      verify_cashier_terminal_pin: {
-        Args: { p_pin: string };
-        Returns: string | null;
+      verify_cashier_employee_pin: {
+        Args: { p_employee_id: string; p_pin: string };
+        Returns: boolean;
       };
       create_cashier_sale: {
         Args: {
-          p_terminal_id: string;
+          p_employee_id: string;
           p_customer_id: string;
           p_items: Json;
           p_payment_method: Database["public"]["Enums"]["invoice_payment_method"];

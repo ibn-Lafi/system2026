@@ -1,7 +1,8 @@
 // جلسة كاشير موقّعة بـHMAC-SHA256 (Web Crypto API — متوافقة مع Edge Runtime
 // الذي يعمل عليه middleware.ts بـNext.js 14 وأيضًا Node بالـServer Actions،
 // بدل Node's crypto module غير المتاح بالـEdge Runtime). لا جلسة Supabase
-// Auth هنا إطلاقًا — الدخول برمز PIN مشترك للجهاز فقط (راجع app/login).
+// Auth هنا إطلاقًا — الموظف يختار اسمه من قائمة ثم يدخل رقمه الخاص (راجع
+// app/login)، والجلسة الناتجة تمثّل هذا الموظف بعينه لا جهازًا عامًا.
 
 export const CASHIER_SESSION_COOKIE = "cashier_session";
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 ساعة (نوبة عمل كاشير نموذجية)
@@ -31,9 +32,9 @@ async function getHmacKey(): Promise<CryptoKey> {
   );
 }
 
-export async function createSessionToken(terminalId: string): Promise<string> {
+export async function createSessionToken(employeeId: string): Promise<string> {
   const expiresAt = Date.now() + SESSION_TTL_MS;
-  const payload = `${terminalId}.${expiresAt}`;
+  const payload = `${employeeId}.${expiresAt}`;
   const key = await getHmacKey();
   const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
   return `${toBase64Url(new TextEncoder().encode(payload))}.${toBase64Url(signature)}`;
@@ -41,15 +42,15 @@ export async function createSessionToken(terminalId: string): Promise<string> {
 
 export async function verifySessionToken(
   token: string | undefined | null,
-): Promise<{ terminalId: string } | null> {
+): Promise<{ employeeId: string } | null> {
   if (!token) return null;
   const [payloadPart, signaturePart] = token.split(".");
   if (!payloadPart || !signaturePart) return null;
 
   const payload = new TextDecoder().decode(fromBase64Url(payloadPart));
-  const [terminalId, expiresAtStr] = payload.split(".");
+  const [employeeId, expiresAtStr] = payload.split(".");
   const expiresAt = Number(expiresAtStr);
-  if (!terminalId || !expiresAt || Date.now() > expiresAt) return null;
+  if (!employeeId || !expiresAt || Date.now() > expiresAt) return null;
 
   const key = await getHmacKey();
   const valid = await crypto.subtle.verify(
@@ -60,5 +61,5 @@ export async function verifySessionToken(
   );
   if (!valid) return null;
 
-  return { terminalId };
+  return { employeeId };
 }
