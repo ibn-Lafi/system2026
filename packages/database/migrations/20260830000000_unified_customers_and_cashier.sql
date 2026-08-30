@@ -16,7 +16,7 @@
 -- بيع بالكرتون من الكاشير.
 
 -- ========== 1) هوية عميل موحّدة برقم الجوال ==========
-create unique index customers_phone_unique on public.customers (phone) where phone is not null;
+create unique index if not exists customers_phone_unique on public.customers (phone) where phone is not null;
 
 create or replace function public.find_or_create_customer_by_phone(
   p_phone text,
@@ -52,11 +52,11 @@ $$;
 
 -- ========== 2) معدّل نقاط الولاء التلقائي ==========
 alter table public.system_settings
-  add column loyalty_riyals_per_point numeric(10, 2) not null default 10
+  add column if not exists loyalty_riyals_per_point numeric(10, 2) not null default 10
   check (loyalty_riyals_per_point > 0);
 
 -- ========== 3) حاويات الكاشير (أجهزة نقطة بيع) ==========
-create table public.cashier_terminals (
+create table if not exists public.cashier_terminals (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   pin_hash text not null,
@@ -65,6 +65,7 @@ create table public.cashier_terminals (
   updated_at timestamptz not null default now()
 );
 
+drop trigger if exists set_updated_at on public.cashier_terminals;
 create trigger set_updated_at before update on public.cashier_terminals
   for each row execute function public.set_updated_at();
 
@@ -72,6 +73,7 @@ alter table public.cashier_terminals enable row level security;
 
 -- لا Policy لـ INSERT/UPDATE عمدًا — الإدارة حصرًا عبر RPCs أدناه
 -- (manage_settings)، والتحقق من الـPIN عبر service_role (يتجاوز RLS أصلًا).
+drop policy if exists "cashier_terminals_select_staff" on public.cashier_terminals;
 create policy "cashier_terminals_select_staff"
 on public.cashier_terminals for select
 using (public.auth_is_staff());
