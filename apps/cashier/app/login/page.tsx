@@ -4,10 +4,11 @@ import { CashierLoginForm } from "./login-form";
 export default async function CashierLoginPage() {
   const supabase = createSupabaseAdminClient();
   const { data: employees } = await supabase
-    .from("cashier_employees")
-    .select<"id, name", { id: string; name: string }>("id, name")
+    .from("employees")
+    .select<"id, full_name", { id: string; full_name: string }>("id, full_name")
+    .eq("is_cashier", true)
     .eq("is_active", true)
-    .order("name");
+    .order("full_name");
 
-  return <CashierLoginForm employees={employees ?? []} />;
+  return <CashierLoginForm employees={(employees ?? []).map((e) => ({ id: e.id, name: e.full_name }))} />;
 }

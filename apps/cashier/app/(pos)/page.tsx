@@ -12,14 +12,13 @@ export default async function PosPage() {
 
   type ProductRow = { id: string; name: string; price: number; image_url: string | null };
   type StockRow = { product_id: string; quantity_available: number };
-  type EmployeeRow = { name: string };
 
   const [{ data: products }, { data: stock }, { data: employee }] = await Promise.all([
     supabase.from("products").select<"id, name, price, image_url", ProductRow>("id, name, price, image_url").order("name"),
     supabase.from("warehouse_stock").select<"product_id, quantity_available", StockRow>("product_id, quantity_available"),
     supabase
-      .from("cashier_employees")
-      .select<"name", EmployeeRow>("name")
+      .from("employees")
+      .select<"full_name", { full_name: string }>("full_name")
       .eq("id", session.employeeId)
       .single(),
   ]);
@@ -33,5 +32,5 @@ export default async function PosPage() {
     available: stockByProduct.get(p.id) ?? 0,
   }));
 
-  return <PosScreen products={posProducts} employeeName={employee?.name ?? "الكاشير"} />;
+  return <PosScreen products={posProducts} employeeName={employee?.full_name ?? "الكاشير"} />;
 }

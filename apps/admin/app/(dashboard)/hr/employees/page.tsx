@@ -20,6 +20,7 @@ type EmployeeRow = {
   housing_allowance: number;
   other_allowances: number;
   is_active: boolean;
+  is_cashier: boolean;
 };
 
 type ShiftRow = { id: string; name: string };
@@ -86,6 +87,22 @@ function EmployeeFormFields({ shifts, defaults }: { shifts: ShiftRow[]; defaults
           <Input name="otherAllowances" type="number" step="0.01" min="0" defaultValue={defaults?.other_allowances ?? 0} />
         </div>
       </div>
+      <div className="space-y-2 border-t border-border pt-3">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="isCashier" defaultChecked={defaults?.is_cashier ?? false} />
+          يمكن أن يكون كاشير (تطبيق نقطة البيع المستقل)
+        </label>
+        <div>
+          <label className="mb-1 block text-sm">رمز PIN الخاص بالكاشير (4 إلى 6 أرقام)</label>
+          <Input
+            name="cashierPin"
+            dir="ltr"
+            inputMode="numeric"
+            pattern="[0-9]{4,6}"
+            placeholder={defaults?.is_cashier ? "اتركه فارغًا للإبقاء على نفس الرمز" : ""}
+          />
+        </div>
+      </div>
     </>
   );
 }
@@ -99,10 +116,10 @@ export default async function HrEmployeesPage() {
     supabase
       .from("employees")
       .select<
-        "id, full_name, national_id, phone, email, job_title, department, hire_date, shift_id, basic_salary, housing_allowance, other_allowances, is_active",
+        "id, full_name, national_id, phone, email, job_title, department, hire_date, shift_id, basic_salary, housing_allowance, other_allowances, is_active, is_cashier",
         EmployeeRow
       >(
-        "id, full_name, national_id, phone, email, job_title, department, hire_date, shift_id, basic_salary, housing_allowance, other_allowances, is_active",
+        "id, full_name, national_id, phone, email, job_title, department, hire_date, shift_id, basic_salary, housing_allowance, other_allowances, is_active, is_cashier",
       )
       .order("full_name"),
     supabase.from("shifts").select<"id, name", ShiftRow>("id, name").order("name"),
@@ -134,6 +151,7 @@ export default async function HrEmployeesPage() {
                 <th>تاريخ التعيين</th>
                 <th>الراتب الإجمالي</th>
                 <th>الحالة</th>
+                <th>كاشير</th>
                 <th></th>
               </tr>
             </thead>
@@ -152,6 +170,7 @@ export default async function HrEmployeesPage() {
                       <Badge variant="muted">غير نشط</Badge>
                     )}
                   </td>
+                  <td>{e.is_cashier ? <Badge variant="success">نعم</Badge> : <Badge variant="muted">لا</Badge>}</td>
                   <td>
                     <ModalTrigger label="تعديل" title={`تعديل بيانات ${e.full_name}`} variant="outline" buttonSize="sm" size="lg">
                       <ActionForm action={updateEmployeeAction} className="space-y-3">

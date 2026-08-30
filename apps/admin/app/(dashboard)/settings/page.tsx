@@ -149,17 +149,6 @@ export default async function SettingsPage() {
           </div>
         </Card>
 
-        <Card>
-          <h2 className="font-semibold">موظفو الكاشير</h2>
-          <p className="mt-1 text-sm text-foreground/60">
-            إدارة موظفي نقطة البيع (الاسم ورمز PIN الخاص بكل موظف) المستخدمين بتطبيق الكاشير المستقل
-          </p>
-          <div className="mt-4">
-            <Link href="/settings/cashier-employees">
-              <Button variant="outline">فتح صفحة موظفي الكاشير</Button>
-            </Link>
-          </div>
-        </Card>
       </div>
     </div>
   );

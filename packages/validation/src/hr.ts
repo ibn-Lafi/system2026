@@ -30,9 +30,20 @@ export const employeeFieldsSchema = z.object({
   basicSalary: z.number().nonnegative("الراتب الأساسي يجب أن يكون صفر أو أكبر"),
   housingAllowance: z.number().nonnegative().default(0),
   otherAllowances: z.number().nonnegative().default(0),
+  // صلاحية الكاشير مدمجة بنفس نموذج الموظف — لا حاجة لصفحة/جدول منفصل
+  // (راجع apps/cashier: كل موظف كاشير هو موظف حقيقي بسجل واحد).
+  isCashier: z.boolean().default(false),
+  cashierPin: z
+    .string()
+    .regex(/^[0-9]{4,6}$/, "رمز PIN يجب أن يكون بين 4 و6 أرقام")
+    .optional()
+    .or(z.literal("")),
 });
 
-export const createEmployeeSchema = employeeFieldsSchema;
+export const createEmployeeSchema = employeeFieldsSchema.refine(
+  (data) => !data.isCashier || Boolean(data.cashierPin),
+  { message: "رمز PIN مطلوب عند تفعيل صلاحية الكاشير", path: ["cashierPin"] },
+);
 export type CreateEmployeeInput = z.infer<typeof createEmployeeSchema>;
 
 export const updateEmployeeSchema = employeeFieldsSchema.extend({
