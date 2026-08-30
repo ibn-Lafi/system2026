@@ -5,13 +5,19 @@ import { getCurrentUserRole } from "../../../lib/get-current-role";
 import { hasPermission } from "../../../lib/permissions";
 
 const OPERATIONS_SECTIONS: { href: string; title: string; description: string }[] = [
+  { href: "/products", title: "المنتجات", description: "كتالوج المنتجات، الفئات، الأسعار، وصور المتجر" },
   { href: "/warehouse", title: "المخزون", description: "أرصدة المخزون المشترك، وتعديل الكميات يدويًا عند الحاجة" },
   { href: "/suppliers", title: "الموردين والمشتريات", description: "بيانات الموردين، فواتير الشراء، والمستحقات" },
 ];
 
 export default async function OperationsHubPage() {
   const role = await getCurrentUserRole();
-  if (!hasPermission(role, "manage_warehouse") && !hasPermission(role, "manage_purchases")) redirect("/");
+  if (
+    !hasPermission(role, "manage_products") &&
+    !hasPermission(role, "manage_warehouse") &&
+    !hasPermission(role, "manage_purchases")
+  )
+    redirect("/");
 
   return (
     <div className="space-y-6">

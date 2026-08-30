@@ -5,13 +5,12 @@ import { getCurrentUserRole } from "../../../lib/get-current-role";
 import { hasPermission } from "../../../lib/permissions";
 
 const MARKETING_SECTIONS: { href: string; title: string; description: string }[] = [
-  { href: "/products", title: "المنتجات", description: "كتالوج المنتجات، الفئات، الأسعار، وصور المتجر" },
-  { href: "/store/leads", title: "بيانات الزوار", description: "أرقام جوال وطلبات الزوار المهتمين عبر صفحة الهبوط" },
+  { href: "/marketing/abandoned-carts", title: "السلات المتروكة", description: "زوار حدّدوا هويتهم بالمتجر ولم يُكملوا الطلب" },
 ];
 
 export default async function MarketingHubPage() {
   const role = await getCurrentUserRole();
-  if (!hasPermission(role, "manage_products") && !hasPermission(role, "manage_settings")) redirect("/");
+  if (!hasPermission(role, "manage_settings")) redirect("/");
 
   return (
     <div className="space-y-6">

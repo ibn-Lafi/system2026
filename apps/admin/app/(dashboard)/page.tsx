@@ -7,7 +7,8 @@ import { ModuleTile } from "../../components/module-tile";
 // النظام (مبني من packages/../lib/modules.ts، المصدر الوحيد لهذا التقسيم).
 // كل مربّع يظهر فقط لمن يملك صلاحية الوصول لصفحة واحدة على الأقل بداخله،
 // ويأخذك مباشرة لأول صفحة يملك صلاحيتها — الشريط الجانبي بعدها (راجع
-// layout.tsx) يعرض حصرًا صفحات ذاك القسم.
+// layout.tsx) يعرض حصرًا صفحات ذاك القسم. عنوان الصفحة (تحية باسم المستخدم)
+// يُعرض بمنتصف رأس الصفحة عبر ModuleShell، وليس هنا.
 export default async function ModulesHubPage() {
   const role = await getCurrentUserRole();
 
@@ -17,8 +18,6 @@ export default async function ModulesHubPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">أقسام النظام</h1>
-
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tiles.map(({ mod, href }) => (
           <ModuleTile key={mod.key} href={href} icon={mod.icon} label={mod.label} description={mod.description} />

@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Card, Button, HorizontalBarChart, MetricCard, LineChart, PageHeader } from "@system2026/ui";
+import { Card, HorizontalBarChart, MetricCard, LineChart, PageHeader } from "@system2026/ui";
 import { computeDelta } from "@system2026/utils";
 import { createSupabaseServerClient } from "@system2026/database/server";
-import { getCurrentUserRole } from "../../../../lib/get-current-role";
-import { hasPermission } from "../../../../lib/permissions";
+import { getCurrentUserRole } from "../../../lib/get-current-role";
+import { hasPermission } from "../../../lib/permissions";
 
 const TREND_DAYS = 14;
 const WEEKDAY_LABELS = ["أحد", "إثن", "ثلا", "أرب", "خمس", "جمعة", "سبت"];
@@ -29,7 +28,10 @@ function formatPhone(phone: string): string {
   return phone.replace(/^\+966/, "0");
 }
 
-export default async function StoreLeadsPage() {
+// مراجعة أداء صفحة الهبوط (apps/landing، تطبيق مستقل بدومين خاص به منذ فصلها
+// عن apps/store) — الزوار وأمنياتهم تُسجَّل بجدول store_leads المشترك، لا شيء
+// هنا يديرها، فقط عرض/تحليل.
+export default async function LandingPagePerformancePage() {
   const role = await getCurrentUserRole();
   if (!hasPermission(role, "manage_settings")) redirect("/");
 
@@ -87,14 +89,7 @@ export default async function StoreLeadsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="بيانات الزوار المستلمة"
-        actions={
-          <Link href="/store">
-            <Button variant="outline">رجوع لإعدادات المتجر</Button>
-          </Link>
-        }
-      />
+      <PageHeader title="صفحة الهبوط" />
 
       {leads.length === 0 ? (
         <Card>

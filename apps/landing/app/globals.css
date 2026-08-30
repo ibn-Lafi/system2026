@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* نفس متغيرات هوية "ميلتشي" الأبيض/الأسود المستخدمة بـ apps/store — صفحة
+   الهبوط لا تستخدم إلا text-background (أبيض) فوق خلفية داكنة مخصّصة
+   (bg-[#006B6B])، لكن الاحتفاظ بنفس المتغيرات يبقيها متطابقة لو احتاجت
+   عنصرًا إضافيًا مستقبلًا. */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 4%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 42%;
+  --border: 0 0% 88%;
+  --ring: 0 0% 4%;
+  --primary: 0 0% 4%;
+  --primary-foreground: 0 0% 100%;
+  --destructive: 0 0% 4%;
+  --destructive-foreground: 0 0% 100%;
+  --radius: 1.125rem;
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}

@@ -466,7 +466,6 @@ export type Database = {
           show_points_of_sale_section: boolean;
           custom_css: string | null;
           custom_html: string | null;
-          show_landing_page: boolean;
           updated_at: string;
           updated_by: string | null;
         },
@@ -483,7 +482,6 @@ export type Database = {
           show_points_of_sale_section?: boolean;
           custom_css?: string | null;
           custom_html?: string | null;
-          show_landing_page?: boolean;
           updated_by?: string | null;
         }
       >;
@@ -496,6 +494,21 @@ export type Database = {
         },
         { id?: string; phone_number: string; desired_store: string },
         never // لا UPDATE/DELETE — للمراجعة فقط
+      >;
+      store_cart_sessions: Table<
+        {
+          id: string;
+          customer_id: string;
+          items: Json;
+          subtotal: number;
+          last_activity_at: string;
+          converted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        },
+        { id?: string; customer_id: string; items: Json; subtotal?: number; last_activity_at?: string },
+        // لا INSERT/UPDATE عبر anon/authenticated — service_role فقط (يتجاوز الأنواع المولّدة هنا أصلًا)
+        { items?: Json; subtotal?: number; last_activity_at?: string; converted_at?: string | null }
       >;
       shifts: Table<
         { id: string; name: string; start_time: string; end_time: string; created_at: string; updated_at: string },
@@ -766,7 +779,6 @@ export type Database = {
           show_points_of_sale_section: boolean;
           custom_css: string | null;
           custom_html: string | null;
-          show_landing_page: boolean;
         };
         Relationships: [];
       };
